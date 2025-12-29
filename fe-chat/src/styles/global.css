@@ -1,0 +1,225 @@
+* {
+  margin: 0;
+  padding: 0;
+}
+
+body{
+  --bg: url("../assets/bg.png") no-repeat center/cover;
+  --bgDark: url("../assets/dark.png") no-repeat center/cover;
+  background: rgba(0, 0, 0, 0.7) var(--bg);
+  background-size: cover;
+  background-attachment: fixed;
+  height: 100vh;
+  overflow: hidden;
+  font-family: 'Courier New', Courier, monospace;
+  z-index: -1;
+}
+.register-container,.login-container {
+
+    background-color: #fcf3ddaa;
+    margin: auto;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    margin-top: 10%;
+    border: 1px solid #ccc;
+    padding: 20px;
+    max-width: 40%;
+    width: 200px;
+    border-radius: 10px;
+    height: fit-content;
+    z-index: 1;
+}
+
+.register-container input , .login-form input{
+    width: 100%;
+    padding: 10px;
+    margin: 5px 0;
+    box-sizing: border-box;
+    border-radius: 10px;
+    border: none;
+    background-color: #e4deceaa;
+}
+.register-container input,.login-form input:focus {
+    outline: none;
+    border: none;
+}
+.login-button {
+    width: 100%;
+    padding: 10px;
+    margin: 5px 0;
+    box-sizing: border-box;
+    background-color: #e4deceaa;
+    color: black;
+    border: none;
+    cursor: pointer;
+    border-radius: 10px
+}
+
+.login-button:hover {
+    background-color: #ccc;
+    color: white;
+}
+
+.register-link{
+    color: #000;
+    text-decoration: none;
+    font-size: 10px;
+    text-align: left;
+}
+
+.error-message{
+    color: red;
+    font-size: 12px;
+    margin-top: 5px;
+    text-align: left;
+}
+
+/* Chat Skeleton Styles */
+.chat-skeleton-layout {
+  display: flex;
+  height: 100%;
+  animation: skeleton-pulse 1.5s ease-in-out infinite alternate;
+}
+
+.chat-skeleton-sidebar {
+  width: 300px;
+  background: #f0f0f0;
+  padding: 10px;
+  border-right: 1px solid #e0e0e0;
+}
+
+.skeleton-item {
+  height: 20px;
+  background: #ddd;
+  margin-bottom: 10px;
+  border-radius: 4px;
+  animation: skeleton-shimmer 1.2s ease-in-out infinite;
+}
+
+.skeleton-item:last-child {
+  margin-bottom: 0;
+}
+
+.chat-skeleton-main {
+  flex: 1;
+  background: #f9f9f9;
+  padding: 10px;
+}
+
+.skeleton-header {
+  height: 30px;
+  background: #ddd;
+  margin-bottom: 20px;
+  border-radius: 4px;
+  animation: skeleton-shimmer 1.2s ease-in-out infinite;
+}
+
+.skeleton-content {
+  height: 400px;
+  background: #eee;
+  border-radius: 8px;
+  animation: skeleton-shimmer 1.2s ease-in-out infinite;
+}
+
+/* Fallback Components Styles */
+.chat-list-fallback {
+  width: 300px;
+  background: #f0f0f0;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-right: 1px solid #e0e0e0;
+  color: #666;
+  font-size: 14px;
+  animation: fade-in 0.3s ease-in;
+}
+
+.message-window-fallback {
+  flex: 1;
+  background: #f9f9f9;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  font-size: 14px;
+  animation: fade-in 0.3s ease-in;
+}
+
+/* Animazioni */
+@keyframes skeleton-pulse {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+.skeleton-item,
+.skeleton-header,
+.skeleton-content {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200px 100%;
+  animation: skeleton-shimmer 1.2s ease-in-out infinite;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Performance optimizations */
+.window-container {
+  contain: layout style paint;
+  will-change: auto;
+}
+
+.chat-skeleton-layout,
+.chat-list-fallback,
+.message-window-fallback {
+  transform: translateZ(0); /* Force hardware acceleration */
+  backface-visibility: hidden;
+}
+
+/* Responsive skeleton */
+@media (max-width: 768px) {
+  .chat-skeleton-sidebar {
+    width: 250px;
+  }
+  
+  .chat-list-fallback {
+    width: 250px;
+    padding: 15px;
+  }
+}
+
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;    /* bordo visibile */
+  border-top-color: transparent;       /* “spazio” che crea l’effetto rotazione */
+  border-radius: 50%;
+  animation: spin .6s linear infinite;
+  vertical-align: middle;              /* allinea con il testo */
+  margin-right: 6px;                   /* spaziatura opzionale */
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

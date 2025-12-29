@@ -1,0 +1,180 @@
+
+--
+file aggiuntivi 
+
+
+// .prettierrc - Formatting automatico
+{
+  "semi": true,
+  "trailingComma": "es5",
+  "singleQuote": true,
+  "printWidth": 80,
+  "tabWidth": 2,
+  "useTabs": false
+}
+
+// .eslintrc.js - Configurazione ESLint estesa
+module.exports = {
+  extends: [
+    'next/core-web-vitals',
+    'next/typescript',
+    '@typescript-eslint/recommended'
+  ],
+  rules: {
+    // Regole specifiche per chat app
+    'no-console': 'warn',
+    'react-hooks/exhaustive-deps': 'error',
+    '@typescript-eslint/no-unused-vars': 'error',
+    'prefer-const': 'error'
+  },
+  overrides: [
+    {
+      files: ['**/*.test.ts', '**/*.test.tsx'],
+      env: {
+        jest: true
+      }
+    }
+  ]
+}
+
+// jest.config.js - Testing configuration
+const nextJest = require('next/jest')
+
+const createJestConfig = nextJest({
+  dir: './',
+})
+
+const customJestConfig = {
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
+  testEnvironment: 'jsdom',
+  moduleNameMapping: {
+    '^@/(.*)$': '<rootDir>/$1',
+  },
+  collectCoverageFrom: [
+    'components/**/*.{ts,tsx}',
+    'pages/**/*.{ts,tsx}',
+    'utils/**/*.{ts,tsx}',
+    '!**/*.d.ts',
+    '!**/node_modules/**',
+  ],
+  coverageThreshold: {
+    global: {
+      branches: 70,
+      functions: 70,
+      lines: 70,
+      statements: 70
+    }
+  }
+}
+
+module.exports = createJestConfig(customJestConfig)
+
+// jest.setup.js - Test setup
+import '@testing-library/jest-dom'
+
+// Mock WebSocket per testing
+global.WebSocket = jest.fn(() => ({
+  send: jest.fn(),
+  close: jest.fn(),
+  addEventListener: jest.fn(),
+  removeEventListener: jest.fn(),
+}))
+
+// next.config.js - Configurazione Next.js ottimizzata
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  experimental: {
+    // Turbopack features
+    turbo: {
+      rules: {
+        '*.svg': {
+          loaders: ['@svgr/webpack'],
+          as: '*.js',
+        },
+      },
+    },
+  },
+  
+  // Ottimizzazioni per chat app
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      // Ottimizzazioni client-side
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+      }
+    }
+    return config
+  },
+  
+  // Headers per WebSocket
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY',
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+        ],
+      },
+    ]
+  },
+  
+  // Bundle analyzer
+  ...(process.env.ANALYZE === 'true' && {
+    webpack: (config) => {
+      config.plugins.push(
+        new (require('@next/bundle-analyzer'))({
+          enabled: true,
+        })
+      )
+      return config
+    },
+  }),
+}
+
+module.exports = nextConfig
+
+// .husky/pre-commit - Git hooks
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🔍 Running pre-commit checks..."
+
+# Type checking
+npm run type-check || exit 1
+
+# Linting
+npm run lint || exit 1
+
+# Format check
+npm run format:check || exit 1
+
+# Run tests
+npm run test || exit 1
+
+echo "✅ Pre-commit checks passed!"
+
+// package.json - Versione migliorata con lint-staged
+{
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,css,md}": [
+      "prettier --write"
+    ]
+  }
+}
+
+
+

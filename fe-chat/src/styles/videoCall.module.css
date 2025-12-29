@@ -1,0 +1,200 @@
+.start-call-button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.start-call-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+/* --- Overlay Incoming Call --- */
+.incoming-call-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.incoming-call-box {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.incoming-call-buttons button {
+  margin: 5px;
+  border: none;
+  border-radius: 5px;
+  padding: 8px 12px;
+  color: white;
+  cursor: pointer;
+}
+
+.decline-btn {
+  background-color: #dc3545;
+}
+
+.accept-btn {
+  background-color: #28a745;
+}
+
+/* --- Contenitore Video Locale --- */
+.local-video-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  text-align: center;
+}
+
+.local-video {
+  width: 200px;
+  height: 150px;
+  object-fit: cover;
+  background-color: #000;
+  transform: scaleX(-1);
+  border: 2px solid #007bff;
+  border-radius: 8px;
+}
+
+.local-video-label {
+  color: white;
+  font-size: 12px;
+  margin-top: 5px;
+}
+
+/* --- Griglia Video Remoti --- */
+.remote-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 10px;
+  padding: 20px;
+  height: 100vh;
+  background-color: #000;
+}
+
+.remote-video-card {
+  position: relative;
+  background-color: #333;
+  border-radius: 8px;
+  overflow: hidden;
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.remote-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.remote-video-label {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  color: white;
+  background-color: rgba(0, 0, 0, 0.7);
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+/* --- Controlli Chiamata --- */
+.controls {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+  background-color: rgba(0, 0, 0, 0.8);
+  padding: 10px 20px;
+  border-radius: 25px;
+  z-index: 1000;
+}
+
+.control-button {
+  border: none;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: white;
+}
+
+.mute {
+  background-color: #28a745;
+}
+
+.mute-active {
+  background-color: #dc3545;
+}
+
+.video {
+  background-color: #28a745;
+}
+
+.video-disabled {
+  background-color: #dc3545;
+}
+
+.end {
+  background-color: #dc3545;
+}
+
+/* --- Popup Errori --- */
+.error-popup {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  background-color: #dc3545;
+  color: white;
+  padding: 10px 15px;
+  border-radius: 5px;
+  z-index: 1000;
+}
+
+.error-popup button {
+  margin-left: 10px;
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+}
+
+/* --- Overlay Connessione --- */
+.connecting-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  z-index: 999;
+}
