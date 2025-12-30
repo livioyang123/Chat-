@@ -7,12 +7,16 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
+
 @Service
 @RequiredArgsConstructor
 public class ChatroomService {
 
     private final ChatroomRepo chatroomRepository;
 
+    @CacheEvict(value = "chatrooms", allEntries = true)
     public Chatroom createRoom(Chatroom chatroom) {
         return chatroomRepository.save(chatroom);
     }
@@ -21,6 +25,7 @@ public class ChatroomService {
         return chatroomRepository.findAll();
     }
 
+    @Cacheable(value = "chatrooms", key = "#id")
     public Optional<Chatroom> getRoomById(String id) {
         return chatroomRepository.findById(id);
     }
@@ -33,6 +38,7 @@ public class ChatroomService {
         chatroomRepository.deleteById(id);
     }
 
+    @Cacheable(value = "chatrooms", key = "'participant_' + #userId")
     public List<Chatroom> getRoomsByParticipantId(String userId) {
         return chatroomRepository.findByParticipantIdsContaining(userId);
     }

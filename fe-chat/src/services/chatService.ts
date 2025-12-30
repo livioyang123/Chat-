@@ -37,19 +37,23 @@ export class ChatService {
   }
 
   // Crea una nuova chat
-  static async createChat(name:string,desc:string,parts: string[]): Promise<ChatRoom> {
+  static async createChat(name: string, desc: string, parts: string[]): Promise<ChatRoom> {
     const currentUserId = AuthService.getCurrentUserId() || ""; 
     const username = AuthService.getCurrentUser() || "";
     parts.push(currentUserId); 
-    name = name? name.trim() : `Chat di ${username}`;
-    desc = desc ? desc.trim() : `Chat creata da ${username}`;
+    
+    // CORREZIONE: Nome gruppo dinamico con numero membri
+    const totalMembers = parts.length;
+    name = name && name.trim() ? name.trim() : `Group(${totalMembers})`;
+    desc = desc && desc.trim() ? desc.trim() : `Chat creata da ${username}`;
+    
     const chatData: CreateChatRequest = {
       name: name,
       description: desc,
       participantIds: parts
     };
+    
     const response = await ApiService.post<ChatRoom>('/chatrooms', chatData);
-  
     return response;
   }
 

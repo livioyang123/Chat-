@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect,useCallback, useState, useRef } from 'react';
 import { MessageService } from '@/services/messageService';
 import type { ChatMessage, MessageFilters } from '@/types/api';
 import { IoSendSharp, IoAttach, IoClose } from "react-icons/io5";
@@ -9,6 +9,7 @@ interface MessageWindowProps {
   chatId: string;
   chatName: string;
   currentUserId: string;
+  chatParticipants: string[];
 }
 
 const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
@@ -17,7 +18,7 @@ const ALLOWED_FILE_TYPES = [
   'video/mp4', 'video/webm', 'video/mov'
 ];
 
-export default function MessageWindow({ chatId, chatName, currentUserId }: MessageWindowProps) {
+export default function MessageWindow({ chatId, chatName, currentUserId, chatParticipants }: MessageWindowProps) {
   // State
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(false);
@@ -34,17 +35,27 @@ export default function MessageWindow({ chatId, chatName, currentUserId }: Messa
   const connectionCallbackRef = useRef<(() => void) | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  //typing status
+  const [typingUsers, setTypingUsers] = useState<Map<string, string>>(new Map());
+  const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set());
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   // Utils
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const formatTimestamp = (timestamp: string) =>
-    new Date(timestamp).toLocaleTimeString('it-IT', {
+  const formatTimestamp = (timestamp: string) => {
+    // Parse ISO string e converti nel fuso orario locale
+    const date = new Date(timestamp);
+    
+    return date.toLocaleTimeString('it-IT', {
       hour: '2-digit',
       minute: '2-digit',
-      hour12: false
+      hour12: false,
+      timeZone: 'Europe/Rome' // Forza il timezone italiano
     });
+  };
 
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 Bytes';
@@ -122,6 +133,103 @@ export default function MessageWindow({ chatId, chatName, currentUserId }: Messa
     loadMessages();
   }, [chatId]);
 
+  //subscribe typing indicator
+  useEffect(() => {
+    if (!chatId || !MessageService.isWebSocketConnected()) return;
+
+    // Subscribe to typing indicator
+    const unsubTyping = MessageService.subscribeToTyping(chatId, (data) => {
+      const { userId, username, isTyping } = data;
+      
+      if (userId === currentUserId) return; // Ignora te stesso
+      
+      setTypingUsers(prev => {
+        const newMap = new Map(prev);
+        if (isTyping && username) {
+          newMap.set(userId, username);
+        } else {
+          newMap.delete(userId);
+        }
+        return newMap;
+      });
+    });
+
+    // Subscribe to online status
+    const unsubStatus = MessageService.subscribeToOnlineStatus(chatId, (data) => {
+      const { userId, status } = data;
+      
+      setOnlineUsers(prev => {
+        const newSet = new Set(prev);
+        if (status === 'online') {
+          newSet.add(userId);
+        } else {
+          newSet.delete(userId);
+        }
+        return newSet;
+      });
+    });
+
+    // Send initial online status
+    MessageService.sendOnlineStatus(chatId, currentUserId, 'online');
+
+    // Heartbeat per mantenere online
+    const heartbeat = setInterval(() => {
+      MessageService.sendOnlineStatus(chatId, currentUserId, 'online');
+    }, 20000); // Ogni 20 secondi
+  
+    return () => {
+      unsubTyping();
+      unsubStatus();
+      clearInterval(heartbeat);
+      MessageService.sendOnlineStatus(chatId, currentUserId, 'offline');
+    };
+  }, [chatId, currentUserId]);
+
+  // Handle typing
+  const handleTyping = useCallback(() => {
+    // Invia "sta scrivendo"
+    MessageService.sendTypingIndicator(chatId, currentUserId, true);
+
+    // Clear previous timeout
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    // Set timeout per stop typing
+    typingTimeoutRef.current = setTimeout(() => {
+      MessageService.sendTypingIndicator(chatId, currentUserId, false);
+    }, 2000);
+  }, [chatId, currentUserId]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setNewMessage(e.target.value);
+    handleTyping();
+  };
+
+  // Render typing indicator
+  const renderTypingIndicator = () => {
+    if (typingUsers.size === 0) return null;
+
+    const names = Array.from(typingUsers.values());
+    const text = names.length === 1 
+      ? `${names[0]} sta scrivendo...`
+      : names.length === 2
+      ? `${names[0]} e ${names[1]} stanno scrivendo...`
+      : `${names[0]} e altri stanno scrivendo...`;
+
+    return (
+      <div className={style["typing-indicator"]}>
+        <span>{text}</span>
+        <span className={style["typing-dots"]}>
+          <span>.</span><span>.</span><span>.</span>
+        </span>
+      </div>
+    );
+  };
+
+  // Online users count (escluso te stesso)
+  const onlineCount = onlineUsers.size - (onlineUsers.has(currentUserId) ? 1 : 0);
+  
   // Auto scroll to bottom
   useEffect(() => {
     scrollToBottom();
@@ -331,8 +439,12 @@ export default function MessageWindow({ chatId, chatName, currentUserId }: Messa
     <div className={style["message-window"]}>
       {/* Header */}
       <div className={style.messageHeader}>
-        {chatName}
+        <span>{chatName}</span>
         <div className={style["connection-status"]}>
+          {/* Online indicator per gruppi */}
+          {chatParticipants.length > 2 && onlineCount > 0 && (
+            <span className={style["online-count"]}>{onlineCount} online</span>
+          )}
           <div className={`${style["status-indicator"]} ${isConnected ? style.connected : style.disconnected}`} />
           <span className={style["status-text"]}>{isConnected ? 'Online' : 'Offline'}</span>
         </div>
@@ -366,6 +478,8 @@ export default function MessageWindow({ chatId, chatName, currentUserId }: Messa
         <div ref={messagesEndRef} />
       </div>
 
+      {/* Typing Indicator */}
+      {renderTypingIndicator()}
       {/* File Preview */}
       {renderFilePreview()}
 
@@ -394,7 +508,7 @@ export default function MessageWindow({ chatId, chatName, currentUserId }: Messa
         <input
           type="text"
           value={newMessage}
-          onChange={(e) => setNewMessage(e.target.value)}
+          onChange={handleInputChange}
           onKeyPress={handleKeyPress}
           placeholder={selectedFile ? "Aggiungi una caption..." : "Scrivi un messaggio..."}
           className={style["message-input-field"]}

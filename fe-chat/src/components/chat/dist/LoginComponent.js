@@ -47,19 +47,21 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 exports.__esModule = true;
+// Modifica LoginComponent.tsx per usare LoadingScreen
 var react_1 = require("react");
 var services_1 = require("@/services");
 var router_1 = require("next/router");
 var axios_1 = require("axios");
 var link_1 = require("next/link");
-var im_1 = require("react-icons/im");
+var LoadingScreen_1 = require("@/components/LoadingScreen");
 var LoginComponent = function () {
     var _a = react_1.useState({
         username: '',
         password: ''
     }), formData = _a[0], setFormData = _a[1];
     var _b = react_1.useState(false), loading = _b[0], setLoading = _b[1];
-    var _c = react_1.useState(''), error = _c[0], setError = _c[1];
+    var _c = react_1.useState(false), showLoading = _c[0], setShowLoading = _c[1]; // Per animazione pecore
+    var _d = react_1.useState(''), error = _d[0], setError = _d[1];
     var router = router_1.useRouter();
     react_1.useEffect(function () {
         router.prefetch('/chat');
@@ -84,7 +86,7 @@ var LoginComponent = function () {
                     e.preventDefault();
                     setLoading(true);
                     setError('');
-                    setFormData({ username: "", password: "" });
+                    setShowLoading(true); // Mostra animazione pecore
                     _c.label = 1;
                 case 1:
                     _c.trys.push([1, 7, 8, 9]);
@@ -106,12 +108,11 @@ var LoginComponent = function () {
                     err_1 = _c.sent();
                     console.warn('Profile loading failed:', err_1);
                     return [3 /*break*/, 6];
-                case 6:
-                    router.replace('/chat');
-                    return [3 /*break*/, 9];
+                case 6: return [3 /*break*/, 9];
                 case 7:
                     error_1 = _c.sent();
                     console.log('Login error:', error_1);
+                    setShowLoading(false); // Nascondi se errore
                     if (axios_1["default"].isAxiosError(error_1)) {
                         setError(((_b = (_a = error_1.response) === null || _a === void 0 ? void 0 : _a.data) === null || _b === void 0 ? void 0 : _b.message) || error_1.message);
                     }
@@ -126,12 +127,20 @@ var LoginComponent = function () {
             }
         });
     }); };
+    var handleLoadingComplete = function () {
+        setFormData({ username: "", password: "" });
+        router.replace('/chat');
+    };
+    // Mostra loading screen se sta caricando
+    if (showLoading) {
+        return React.createElement(LoadingScreen_1["default"], { onComplete: handleLoadingComplete });
+    }
     return (React.createElement("div", { className: "login-container" },
         React.createElement("span", { className: "login-title" }, "Chat"),
         React.createElement("form", { onSubmit: handleSubmit, className: "login-form" },
             React.createElement("input", { type: "text", name: "username", placeholder: "Nome", value: formData.username, onChange: handleChange, required: true, autoComplete: "username", disabled: loading, className: "login-input" }),
             React.createElement("input", { type: "password", name: "password", placeholder: "Password", value: formData.password, onChange: handleChange, required: true, autoComplete: "current-password", disabled: loading, className: "login-input" }),
-            React.createElement("button", { type: "submit", disabled: loading, className: "login-button" }, loading ? React.createElement(im_1.ImSpinner3, { className: 'spinner' }) : 'Accedi'),
+            React.createElement("button", { type: "submit", disabled: loading, className: "login-button" }, loading ? 'Accesso...' : 'Accedi'),
             error && React.createElement("div", { className: "error-message", "aria-live": "polite" }, error)),
         React.createElement("div", { className: "register-link" },
             "Non hai un account? ",

@@ -119,6 +119,86 @@ export class MessageService {
     }
   }
 
+  static subscribeToTyping(
+    chatId: string,
+    onTypingChange: (data: { userId: string; username?: string; isTyping: boolean }) => void
+  ): () => void {
+    if (!this.stompClient || !this.isConnected) {
+      throw new Error('WebSocket non connesso');
+    }
+
+    const subscription = this.stompClient.subscribe(
+      `/topic/chatroom/${chatId}/typing`,
+      (message) => {
+        try {
+          const data = JSON.parse(message.body);
+          onTypingChange(data);
+        } catch (error) {
+          console.error('Error parsing typing indicator:', error);
+        }
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }
+
+  // Subscribe to online status
+  static subscribeToOnlineStatus(
+    chatId: string,
+    onStatusChange: (data: { userId: string; status: 'online' | 'offline' }) => void
+  ): () => void {
+    if (!this.stompClient || !this.isConnected) {
+      throw new Error('WebSocket non connesso');
+    }
+
+    const subscription = this.stompClient.subscribe(
+      `/topic/chatroom/${chatId}/status`,
+      (message) => {
+        try {
+          const data = JSON.parse(message.body);
+          onStatusChange(data);
+        } catch (error) {
+          console.error('Error parsing status update:', error);
+        }
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }
+
+  // Send typing indicator
+  static sendTypingIndicator(chatId: string, userId: string, isTyping: boolean): void {
+    if (!this.stompClient || !this.isConnected) return;
+
+    const username = typeof window !== 'undefined' ? sessionStorage.getItem('currentUser') : null;
+
+    const destination = isTyping ? '/app/chat.typing' : '/app/chat.stopTyping';
+    
+    this.stompClient.publish({
+      destination,
+      body: JSON.stringify({
+        chatRoomId: chatId,
+        userId,
+        username
+      })
+    });
+  }
+
+  // Send online status
+  static sendOnlineStatus(chatId: string, userId: string, status: 'online' | 'offline'): void {
+    if (!this.stompClient || !this.isConnected) return;
+
+    const destination = status === 'online' ? '/app/user.online' : '/app/user.offline';
+    
+    this.stompClient.publish({
+      destination,
+      body: JSON.stringify({
+        userId,
+        chatroomId: chatId
+      })
+    });
+  }
+
   // ==================== WEBSOCKET METHODS - CORRETTI ====================
 
   // Inizializza connessione WebSocket

@@ -14,6 +14,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
 
 import org.springframework.security.core.userdetails.User.UserBuilder;
 
@@ -27,18 +30,22 @@ public class UserService implements UserDetailsService {
         return userRepository.findAll();
     }
 
+    @Cacheable(value = "users", key = "#id")
     public Optional<User> getUserById(String id) {
         return userRepository.findById(id);
     }
 
+    @Cacheable(value = "users", key = "#username")
     public User getUserByUsername(String username) {
         return userRepository.findByUsername(username);
     }
 
+    @CacheEvict(value = "users", key = "#id")
     public void deleteUserById(String id) {
         userRepository.deleteById(id);
     }
 
+    @CachePut(value = "users", key = "#user.id")
     public User saveUser(User user) {
         return userRepository.save(user);
     }
@@ -131,7 +138,8 @@ public class UserService implements UserDetailsService {
         }
         return false;
     }
-
+    
+    @Cacheable(value = "users", key = "'friends_' + #userId")
     public List<User> getUserFriends(String userId) {
         Optional<User> userOpt = userRepository.findById(userId);
         if (userOpt.isPresent()) {

@@ -55,7 +55,7 @@ var ALLOWED_FILE_TYPES = [
 ];
 function MessageWindow(_a) {
     var _this = this;
-    var chatId = _a.chatId, chatName = _a.chatName, currentUserId = _a.currentUserId;
+    var chatId = _a.chatId, chatName = _a.chatName, currentUserId = _a.currentUserId, chatParticipants = _a.chatParticipants;
     // State
     var _b = react_1.useState([]), messages = _b[0], setMessages = _b[1];
     var _c = react_1.useState(false), loading = _c[0], setLoading = _c[1];
@@ -70,16 +70,23 @@ function MessageWindow(_a) {
     var unsubscribeRef = react_1.useRef(null);
     var connectionCallbackRef = react_1.useRef(null);
     var fileInputRef = react_1.useRef(null);
+    //typing status
+    var _k = react_1.useState(new Map()), typingUsers = _k[0], setTypingUsers = _k[1];
+    var _l = react_1.useState(new Set()), onlineUsers = _l[0], setOnlineUsers = _l[1];
+    var typingTimeoutRef = react_1.useRef(null);
     // Utils
     var scrollToBottom = function () {
         var _a;
         (_a = messagesEndRef.current) === null || _a === void 0 ? void 0 : _a.scrollIntoView({ behavior: 'smooth' });
     };
     var formatTimestamp = function (timestamp) {
-        return new Date(timestamp).toLocaleTimeString('it-IT', {
+        // Parse ISO string e converti nel fuso orario locale
+        var date = new Date(timestamp);
+        return date.toLocaleTimeString('it-IT', {
             hour: '2-digit',
             minute: '2-digit',
-            hour12: false
+            hour12: false,
+            timeZone: 'Europe/Rome' // Forza il timezone italiano
         });
     };
     var formatFileSize = function (bytes) {
@@ -173,6 +180,89 @@ function MessageWindow(_a) {
         }); };
         loadMessages();
     }, [chatId]);
+    //subscribe typing indicator
+    react_1.useEffect(function () {
+        if (!chatId || !messageService_1.MessageService.isWebSocketConnected())
+            return;
+        // Subscribe to typing indicator
+        var unsubTyping = messageService_1.MessageService.subscribeToTyping(chatId, function (data) {
+            var userId = data.userId, username = data.username, isTyping = data.isTyping;
+            if (userId === currentUserId)
+                return; // Ignora te stesso
+            setTypingUsers(function (prev) {
+                var newMap = new Map(prev);
+                if (isTyping && username) {
+                    newMap.set(userId, username);
+                }
+                else {
+                    newMap["delete"](userId);
+                }
+                return newMap;
+            });
+        });
+        // Subscribe to online status
+        var unsubStatus = messageService_1.MessageService.subscribeToOnlineStatus(chatId, function (data) {
+            var userId = data.userId, status = data.status;
+            setOnlineUsers(function (prev) {
+                var newSet = new Set(prev);
+                if (status === 'online') {
+                    newSet.add(userId);
+                }
+                else {
+                    newSet["delete"](userId);
+                }
+                return newSet;
+            });
+        });
+        // Send initial online status
+        messageService_1.MessageService.sendOnlineStatus(chatId, currentUserId, 'online');
+        // Heartbeat per mantenere online
+        var heartbeat = setInterval(function () {
+            messageService_1.MessageService.sendOnlineStatus(chatId, currentUserId, 'online');
+        }, 20000); // Ogni 20 secondi
+        return function () {
+            unsubTyping();
+            unsubStatus();
+            clearInterval(heartbeat);
+            messageService_1.MessageService.sendOnlineStatus(chatId, currentUserId, 'offline');
+        };
+    }, [chatId, currentUserId]);
+    // Handle typing
+    var handleTyping = react_1.useCallback(function () {
+        // Invia "sta scrivendo"
+        messageService_1.MessageService.sendTypingIndicator(chatId, currentUserId, true);
+        // Clear previous timeout
+        if (typingTimeoutRef.current) {
+            clearTimeout(typingTimeoutRef.current);
+        }
+        // Set timeout per stop typing
+        typingTimeoutRef.current = setTimeout(function () {
+            messageService_1.MessageService.sendTypingIndicator(chatId, currentUserId, false);
+        }, 2000);
+    }, [chatId, currentUserId]);
+    var handleInputChange = function (e) {
+        setNewMessage(e.target.value);
+        handleTyping();
+    };
+    // Render typing indicator
+    var renderTypingIndicator = function () {
+        if (typingUsers.size === 0)
+            return null;
+        var names = Array.from(typingUsers.values());
+        var text = names.length === 1
+            ? names[0] + " sta scrivendo..."
+            : names.length === 2
+                ? names[0] + " e " + names[1] + " stanno scrivendo..."
+                : names[0] + " e altri stanno scrivendo...";
+        return (React.createElement("div", { className: chatWindow_module_css_1["default"]["typing-indicator"] },
+            React.createElement("span", null, text),
+            React.createElement("span", { className: chatWindow_module_css_1["default"]["typing-dots"] },
+                React.createElement("span", null, "."),
+                React.createElement("span", null, "."),
+                React.createElement("span", null, "."))));
+    };
+    // Online users count (escluso te stesso)
+    var onlineCount = onlineUsers.size - (onlineUsers.has(currentUserId) ? 1 : 0);
     // Auto scroll to bottom
     react_1.useEffect(function () {
         scrollToBottom();
@@ -320,8 +410,11 @@ function MessageWindow(_a) {
     var canSend = (newMessage.trim() || selectedFile) && isConnected && !isUploading;
     return (React.createElement("div", { className: chatWindow_module_css_1["default"]["message-window"] },
         React.createElement("div", { className: chatWindow_module_css_1["default"].messageHeader },
-            chatName,
+            React.createElement("span", null, chatName),
             React.createElement("div", { className: chatWindow_module_css_1["default"]["connection-status"] },
+                chatParticipants.length > 2 && onlineCount > 0 && (React.createElement("span", { className: chatWindow_module_css_1["default"]["online-count"] },
+                    onlineCount,
+                    " online")),
                 React.createElement("div", { className: chatWindow_module_css_1["default"]["status-indicator"] + " " + (isConnected ? chatWindow_module_css_1["default"].connected : chatWindow_module_css_1["default"].disconnected) }),
                 React.createElement("span", { className: chatWindow_module_css_1["default"]["status-text"] }, isConnected ? 'Online' : 'Offline'))),
         React.createElement("div", { className: chatWindow_module_css_1["default"].messages },
@@ -332,12 +425,13 @@ function MessageWindow(_a) {
                     message.senderId !== currentUserId && (React.createElement("div", { className: chatWindow_module_css_1["default"]["message-sender"] }, message.senderId)),
                     renderMessageContent(message)))); })),
             React.createElement("div", { ref: messagesEndRef })),
+        renderTypingIndicator(),
         renderFilePreview(),
         React.createElement("div", { id: chatWindow_module_css_1["default"]["message-input"] },
             React.createElement("input", { type: "file", ref: fileInputRef, onChange: handleFileSelect, accept: "image/*,video/*", className: chatWindow_module_css_1["default"]["hidden-file-input"], title: "Seleziona un file da allegare" }),
             React.createElement("button", { onClick: function () { var _a; return (_a = fileInputRef.current) === null || _a === void 0 ? void 0 : _a.click(); }, className: chatWindow_module_css_1["default"]["attach-button"], disabled: !isConnected || isUploading, type: "button", title: "Allega file", "aria-label": "Allega immagine o video" },
                 React.createElement(io5_1.IoAttach, null)),
-            React.createElement("input", { type: "text", value: newMessage, onChange: function (e) { return setNewMessage(e.target.value); }, onKeyPress: handleKeyPress, placeholder: selectedFile ? "Aggiungi una caption..." : "Scrivi un messaggio...", className: chatWindow_module_css_1["default"]["message-input-field"], disabled: !isConnected || isUploading }),
+            React.createElement("input", { type: "text", value: newMessage, onChange: handleInputChange, onKeyPress: handleKeyPress, placeholder: selectedFile ? "Aggiungi una caption..." : "Scrivi un messaggio...", className: chatWindow_module_css_1["default"]["message-input-field"], disabled: !isConnected || isUploading }),
             React.createElement("div", { id: chatWindow_module_css_1["default"]["btnSend"], onClick: sendMessage, className: chatWindow_module_css_1["default"]["send-button"] + " " + (!canSend ? chatWindow_module_css_1["default"].disabled : ''), role: "button", tabIndex: 0, onKeyDown: function (e) {
                     if ((e.key === 'Enter' || e.key === ' ') && canSend) {
                         e.preventDefault();

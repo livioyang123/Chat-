@@ -204,6 +204,65 @@ var MessageService = /** @class */ (function () {
             });
         });
     };
+    MessageService.subscribeToTyping = function (chatId, onTypingChange) {
+        if (!this.stompClient || !this.isConnected) {
+            throw new Error('WebSocket non connesso');
+        }
+        var subscription = this.stompClient.subscribe("/topic/chatroom/" + chatId + "/typing", function (message) {
+            try {
+                var data = JSON.parse(message.body);
+                onTypingChange(data);
+            }
+            catch (error) {
+                console.error('Error parsing typing indicator:', error);
+            }
+        });
+        return function () { return subscription.unsubscribe(); };
+    };
+    // Subscribe to online status
+    MessageService.subscribeToOnlineStatus = function (chatId, onStatusChange) {
+        if (!this.stompClient || !this.isConnected) {
+            throw new Error('WebSocket non connesso');
+        }
+        var subscription = this.stompClient.subscribe("/topic/chatroom/" + chatId + "/status", function (message) {
+            try {
+                var data = JSON.parse(message.body);
+                onStatusChange(data);
+            }
+            catch (error) {
+                console.error('Error parsing status update:', error);
+            }
+        });
+        return function () { return subscription.unsubscribe(); };
+    };
+    // Send typing indicator
+    MessageService.sendTypingIndicator = function (chatId, userId, isTyping) {
+        if (!this.stompClient || !this.isConnected)
+            return;
+        var username = typeof window !== 'undefined' ? sessionStorage.getItem('currentUser') : null;
+        var destination = isTyping ? '/app/chat.typing' : '/app/chat.stopTyping';
+        this.stompClient.publish({
+            destination: destination,
+            body: JSON.stringify({
+                chatRoomId: chatId,
+                userId: userId,
+                username: username
+            })
+        });
+    };
+    // Send online status
+    MessageService.sendOnlineStatus = function (chatId, userId, status) {
+        if (!this.stompClient || !this.isConnected)
+            return;
+        var destination = status === 'online' ? '/app/user.online' : '/app/user.offline';
+        this.stompClient.publish({
+            destination: destination,
+            body: JSON.stringify({
+                userId: userId,
+                chatroomId: chatId
+            })
+        });
+    };
     // ==================== WEBSOCKET METHODS - CORRETTI ====================
     // Inizializza connessione WebSocket
     MessageService.initializeWebSocket = function (serverUrl) {
