@@ -1,7 +1,8 @@
-// src/components/LoadingScreen.tsx
 'use client';
 import { useEffect, useState } from 'react';
 import styles from '@/styles/loading.module.css';
+import { ChatService } from '@/services';
+import { MessageService } from '@/services/messageService';
 
 interface LoadingScreenProps {
   onComplete: () => void;
@@ -9,42 +10,52 @@ interface LoadingScreenProps {
 
 export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
   const [progress, setProgress] = useState(0);
+  const [status, setStatus] = useState('Inizializzazione...');
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setTimeout(() => onComplete(), 500);
-          return 100;
-        }
-        return prev + 10;
-      });
-    }, 300);
+    const preloadData = async () => {
+      try {
+        // Step 1: Connessione WebSocket (0-30%)
+        setStatus('Connessione al server...');
+        await MessageService.initializeWebSocket();
+        setProgress(30);
 
-    return () => clearInterval(interval);
+        // Step 2: Caricamento chat (30-70%)
+        setStatus('Caricamento chat...');
+        await ChatService.getUserChats();
+        setProgress(70);
+
+        // Step 3: Finalizzazione (70-100%)
+        setStatus('Quasi pronto...');
+        await new Promise(resolve => setTimeout(resolve, 500));
+        setProgress(100);
+
+        // Completa il caricamento
+        setTimeout(() => onComplete(), 300);
+
+      } catch (error) {
+        console.error('Errore durante il precaricamento:', error);
+        // Anche in caso di errore, completa il caricamento
+        setProgress(100);
+        setTimeout(() => onComplete(), 500);
+      }
+    };
+
+    preloadData();
   }, [onComplete]);
 
   return (
     <div className={styles.loadingContainer}>
       <div className={styles.animationArea}>
-        {/* Pecore che mangiano */}
-        <div className={styles.sheepContainer}>
-          <div className={styles.sheep}>
-            <div className={styles.sheepBody}>🐑</div>
-            <div className={styles.grass}>🌿</div>
+        {/* Pecora che cammina */}
+        <div className={styles.sheepWalkContainer}>
+          <div className={styles.walkingSheep}>
+            🐑
           </div>
-          <div className={`${styles.sheep} ${styles.sheep2}`}>
-            <div className={styles.sheepBody}>🐑</div>
-            <div className={styles.grass}>🌿</div>
-          </div>
-          <div className={`${styles.sheep} ${styles.sheep3}`}>
-            <div className={styles.sheepBody}>🐑</div>
-            <div className={styles.grass}>🌿</div>
-          </div>
+          <div className={styles.ground}></div>
         </div>
 
-        <div className={styles.loadingText}>Caricamento...</div>
+        <div className={styles.loadingText}>{status}</div>
       </div>
 
       {/* Barra di progresso */}

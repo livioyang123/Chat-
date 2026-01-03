@@ -18,7 +18,7 @@ services:
     networks:
       - chat-network
     healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -43,34 +43,32 @@ services:
       start_period: 30s
     command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
 
-  # Backend Service (Multi-stage build)
+  # Backend Service
   backend:
     build:
       context: .
       dockerfile: Dockerfile
       target: production
-      args:
-        MAVEN_VERSION: 3.9.9
-        JAVA_VERSION: 17
     container_name: chat-backend
     restart: unless-stopped
     ports:
       - "8080:8080"
     environment:
-      # MongoDB Configuration
-      SPRING_DATA_MONGODB_URI: mongodb://${MONGO_ROOT_USERNAME:-admin}:${MONGO_ROOT_PASSWORD:-admin123}@mongodb:27017/${MONGO_DATABASE:-chat-app}?authSource=admin
+      # MongoDB Configuration - FIX: Corretta stringa di connessione
+      SPRING_DATA_MONGODB_URI: mongodb://${MONGO_ROOT_USERNAME:-admin}:${MONGO_ROOT_PASSWORD:-admin123}@mongodb:27017/${MONGO_DATABASE:-chat-app}?authSource=admin&retryWrites=true&w=majority
       SPRING_DATA_MONGODB_DATABASE: ${MONGO_DATABASE:-chat-app}
       
       # Redis Configuration
-      SPRING_REDIS_HOST: redis
-      SPRING_REDIS_PORT: 6379
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_DATA_REDIS_TIMEOUT: 60000
       
       # JWT Configuration
       JWT_SECRET: ${JWT_SECRET:-miaChiaveSegretaMoltoPiùSicura123!ChangeMeInProduction}
       
       # File Upload Configuration
       APP_UPLOAD_DIR: /app/uploads
-      APP_BASE_URL: http://localhost:8080
+      APP_BASE_URL: ${BACKEND_URL:-http://localhost:8080}
       
       # Server Configuration
       SERVER_PORT: 8080
@@ -79,8 +77,10 @@ services:
       MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info,metrics
       
       # Logging
-      LOGGING_LEVEL_COM_CHAT_DEMO: INFO
-      LOGGING_LEVEL_ORG_SPRINGFRAMEWORK: WARN
+      LOGGING_LEVEL_COM_CHAT_DEMO: DEBUG
+      LOGGING_LEVEL_ORG_SPRINGFRAMEWORK: INFO
+      LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_DATA_MONGODB: DEBUG
+      
     volumes:
       - backend_uploads:/app/uploads
     networks:
@@ -95,7 +95,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
-      start_period: 60s
+      start_period: 90s
 
 networks:
   chat-network:
