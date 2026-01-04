@@ -47,7 +47,6 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 exports.__esModule = true;
-// Modifica LoginComponent.tsx per usare LoadingScreen
 var react_1 = require("react");
 var services_1 = require("@/services");
 var router_1 = require("next/router");
@@ -60,7 +59,7 @@ var LoginComponent = function () {
         password: ''
     }), formData = _a[0], setFormData = _a[1];
     var _b = react_1.useState(false), loading = _b[0], setLoading = _b[1];
-    var _c = react_1.useState(false), showLoading = _c[0], setShowLoading = _c[1]; // Per animazione pecore
+    var _c = react_1.useState(false), showLoading = _c[0], setShowLoading = _c[1];
     var _d = react_1.useState(''), error = _d[0], setError = _d[1];
     var router = router_1.useRouter();
     react_1.useEffect(function () {
@@ -76,59 +75,74 @@ var LoginComponent = function () {
             var _a;
             return (__assign(__assign({}, prev), (_a = {}, _a[name] = value, _a)));
         });
-    }, []);
+        // Pulisci errore quando l'utente modifica i campi
+        if (error)
+            setError('');
+    }, [error]);
     var handleSubmit = function (e) { return __awaiter(void 0, void 0, void 0, function () {
-        var loginPromise, err_1, error_1;
-        var _a, _b;
-        return __generator(this, function (_c) {
-            switch (_c.label) {
+        var err_1, error_1, status;
+        var _a, _b, _c;
+        return __generator(this, function (_d) {
+            switch (_d.label) {
                 case 0:
                     e.preventDefault();
                     setLoading(true);
                     setError('');
-                    setShowLoading(true); // Mostra animazione pecore
-                    _c.label = 1;
+                    _d.label = 1;
                 case 1:
-                    _c.trys.push([1, 7, 8, 9]);
-                    loginPromise = services_1.AuthService.login({
-                        username: formData.username,
-                        password: formData.password
-                    });
-                    return [4 /*yield*/, loginPromise];
+                    _d.trys.push([1, 7, , 8]);
+                    return [4 /*yield*/, services_1.AuthService.login({
+                            username: formData.username,
+                            password: formData.password
+                        })];
                 case 2:
-                    _c.sent();
-                    _c.label = 3;
+                    _d.sent();
+                    _d.label = 3;
                 case 3:
-                    _c.trys.push([3, 5, , 6]);
+                    _d.trys.push([3, 5, , 6]);
                     return [4 /*yield*/, services_1.AuthService.getProfile(formData.username)];
                 case 4:
-                    _c.sent();
+                    _d.sent();
                     return [3 /*break*/, 6];
                 case 5:
-                    err_1 = _c.sent();
+                    err_1 = _d.sent();
                     console.warn('Profile loading failed:', err_1);
                     return [3 /*break*/, 6];
-                case 6: return [3 /*break*/, 9];
+                case 6:
+                    // Mostra loading screen SOLO dopo login riuscito
+                    setShowLoading(true);
+                    return [3 /*break*/, 8];
                 case 7:
-                    error_1 = _c.sent();
+                    error_1 = _d.sent();
                     console.log('Login error:', error_1);
-                    setShowLoading(false); // Nascondi se errore
+                    setLoading(false); // Ferma loading immediatamente
+                    // Gestione errore migliorata - resta nella pagina
                     if (axios_1["default"].isAxiosError(error_1)) {
-                        setError(((_b = (_a = error_1.response) === null || _a === void 0 ? void 0 : _a.data) === null || _b === void 0 ? void 0 : _b.message) || error_1.message);
+                        status = (_a = error_1.response) === null || _a === void 0 ? void 0 : _a.status;
+                        if (status === 401 || status === 400) {
+                            setError('Username o password non corretti');
+                        }
+                        else if (status === 500) {
+                            setError('Errore del server. Riprova più tardi.');
+                        }
+                        else {
+                            setError(((_c = (_b = error_1.response) === null || _b === void 0 ? void 0 : _b.data) === null || _c === void 0 ? void 0 : _c.message) || 'Errore di connessione');
+                        }
+                    }
+                    else if (error_1 instanceof Error) {
+                        setError(error_1.message);
                     }
                     else {
-                        setError('Errore di accesso. Riprova.');
+                        setError('Errore sconosciuto. Riprova.');
                     }
-                    return [3 /*break*/, 9];
-                case 8:
-                    setLoading(false);
-                    return [7 /*endfinally*/];
-                case 9: return [2 /*return*/];
+                    return [3 /*break*/, 8];
+                case 8: return [2 /*return*/];
             }
         });
     }); };
     var handleLoadingComplete = function () {
         setFormData({ username: "", password: "" });
+        setLoading(false);
         router.replace('/chat');
     };
     // Mostra loading screen se sta caricando
@@ -141,7 +155,7 @@ var LoginComponent = function () {
             React.createElement("input", { type: "text", name: "username", placeholder: "Nome", value: formData.username, onChange: handleChange, required: true, autoComplete: "username", disabled: loading, className: "login-input" }),
             React.createElement("input", { type: "password", name: "password", placeholder: "Password", value: formData.password, onChange: handleChange, required: true, autoComplete: "current-password", disabled: loading, className: "login-input" }),
             React.createElement("button", { type: "submit", disabled: loading, className: "login-button" }, loading ? 'Accesso...' : 'Accedi'),
-            error && React.createElement("div", { className: "error-message", "aria-live": "polite" }, error)),
+            error && (React.createElement("div", { className: "error-message", "aria-live": "polite" }, error))),
         React.createElement("div", { className: "register-link" },
             "Non hai un account? ",
             React.createElement(link_1["default"], { href: "/register", prefetch: true }, "Registrati"))));

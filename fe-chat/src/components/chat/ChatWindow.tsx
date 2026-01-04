@@ -1,46 +1,17 @@
 import { useEffect, useState, useCallback, Suspense, lazy } from "react";
 import { IoIosSettings } from "react-icons/io";
 import style from "@/styles/chatWindow.module.css";
-import { ImSpinner3 } from "react-icons/im";
 
-// Lazy loading dei componenti pesanti
 const ChatList = lazy(() => import("./ChatList"));
 const MessageWindow = lazy(() => import("./MessageWindow"));
 
-// Componente di loading ottimizzato
-const ChatSkeleton = () => (
-  <div className={style["window-container"]}>
-    <div className={style["settings-container"]}>
-      <div className={style["setting"]}>
-        <button title="Settings" className={style["btnSetting"]}><IoIosSettings /></button>
-        <button title="Settings" className={style["btnSetting"]}><IoIosSettings /></button>
-      </div>
-    </div>
-    <div className={style["chat-skeleton-layout"]}>
-      <div className={style["chat-skeleton-sidebar"]}>
-        <div className={style["skeleton-item"]}></div>
-        <div className={style["skeleton-item"]}></div>
-        <div className={style["skeleton-item"]}></div>
-      </div>
-      <div className={style["chat-skeleton-main"]}>
-        <div className={style["skeleton-header"]}></div>
-        <div className={style["skeleton-content"]}></div>
-      </div>
-    </div>
-  </div>
-);
-
-// Componenti di fallback per Suspense
+// Fallback senza testo
 const ChatListFallback = () => (
-  <div className={style["chat-list-fallback"]}>
-    Caricamento chat... <ImSpinner3 className="spinner"/>
-  </div>
+  <div className={style["chat-list-fallback"]}></div>
 );
 
 const MessageWindowFallback = () => (
-  <div className={style["message-window-fallback"]}>
-    Caricamento messaggi... <ImSpinner3 className="spinner"/>
-  </div>
+  <div className={style["message-window-fallback"]}></div>
 );
 
 export default function ChatWindow() {
@@ -51,22 +22,18 @@ export default function ChatWindow() {
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
-    const initializeUser = () => {
-      const userId = sessionStorage.getItem('currentUser');
-      if (userId) {
-        setUserId(userId);
+    const userId = sessionStorage.getItem('currentUser');
+    if (userId) {
+      setUserId(userId);
+      setIsInitialized(true);
+    } else {
+      const timer = setTimeout(() => {
+        const retryUserId = sessionStorage.getItem('currentUser');
+        setUserId(retryUserId || "");
         setIsInitialized(true);
-      } else {
-        const timer = setTimeout(() => {
-          const retryUserId = sessionStorage.getItem('currentUser');
-          setUserId(retryUserId || "");
-          setIsInitialized(true);
-        }, 100);
-        return () => clearTimeout(timer);
-      }
-    };
-
-    initializeUser();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
   }, []);
 
   const handleChatSelection = useCallback((chatId: string, chatName: string, participantIds: string[]) => {
@@ -76,7 +43,7 @@ export default function ChatWindow() {
   }, []);
 
   if (!isInitialized) {
-    return <ChatSkeleton />;
+    return <div className={style["window-container"]}></div>;
   }
 
   return (

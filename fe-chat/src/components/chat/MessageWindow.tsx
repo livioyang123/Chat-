@@ -1,4 +1,4 @@
-import { useEffect,useCallback, useState, useRef } from 'react';
+import { useEffect, useCallback, useState, useRef } from 'react';
 import { MessageService } from '@/services/messageService';
 import type { ChatMessage, MessageFilters } from '@/types/api';
 import { IoSendSharp, IoAttach, IoClose } from "react-icons/io5";
@@ -12,14 +12,13 @@ interface MessageWindowProps {
   chatParticipants: string[];
 }
 
-const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
+const MAX_FILE_SIZE = 100 * 1024 * 1024;
 const ALLOWED_FILE_TYPES = [
   'image/jpeg', 'image/png', 'image/gif', 'image/webp',
   'video/mp4', 'video/webm', 'video/mov'
 ];
 
 export default function MessageWindow({ chatId, chatName, currentUserId, chatParticipants }: MessageWindowProps) {
-  // State
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -28,32 +27,29 @@ export default function MessageWindow({ chatId, chatName, currentUserId, chatPar
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [filePreviewUrl, setFilePreviewUrl] = useState<string | null>(null);
+  const [typingUsers, setTypingUsers] = useState<Map<string, string>>(new Map());
+  const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set());
+  
+  // Modal state
+  const [modalMedia, setModalMedia] = useState<{url: string; type: 'image' | 'video'} | null>(null);
 
-  // Refs
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const unsubscribeRef = useRef<(() => void) | null>(null);
   const connectionCallbackRef = useRef<(() => void) | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  //typing status
-  const [typingUsers, setTypingUsers] = useState<Map<string, string>>(new Map());
-  const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set());
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Utils
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   const formatTimestamp = (timestamp: string) => {
-    // Parse ISO string e converti nel fuso orario locale
     const date = new Date(timestamp);
-    
     return date.toLocaleTimeString('it-IT', {
       hour: '2-digit',
       minute: '2-digit',
       hour12: false,
-      timeZone: 'Europe/Rome' // Forza il timezone italiano
+      timeZone: 'Europe/Rome'
     });
   };
 
@@ -65,7 +61,6 @@ export default function MessageWindow({ chatId, chatName, currentUserId, chatPar
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  // WebSocket initialization
   useEffect(() => {
     const initWebSocket = async () => {
       try {
@@ -83,14 +78,11 @@ export default function MessageWindow({ chatId, chatName, currentUserId, chatPar
     };
   }, []);
 
-  // Chat subscription management
   useEffect(() => {
     if (!chatId || !MessageService.isWebSocketConnected()) return;
 
-    // Cleanup previous subscription
     unsubscribeRef.current?.();
 
-    // Subscribe to new chat
     try {
       unsubscribeRef.current = MessageService.subscribeToChat(
         chatId,
@@ -107,7 +99,6 @@ export default function MessageWindow({ chatId, chatName, currentUserId, chatPar
     };
   }, [chatId, isConnected]);
 
-  // Load existing messages
   useEffect(() => {
     if (!chatId) {
       setMessages([]);
@@ -133,15 +124,13 @@ export default function MessageWindow({ chatId, chatName, currentUserId, chatPar
     loadMessages();
   }, [chatId]);
 
-  //subscribe typing indicator
   useEffect(() => {
     if (!chatId || !MessageService.isWebSocketConnected()) return;
 
-    // Subscribe to typing indicator
     const unsubTyping = MessageService.subscribeToTyping(chatId, (data) => {
       const { userId, username, isTyping } = data;
       
-      if (userId === currentUserId) return; // Ignora te stesso
+      if (userId === currentUserId) return;
       
       setTypingUsers(prev => {
         const newMap = new Map(prev);
@@ -154,7 +143,6 @@ export default function MessageWindow({ chatId, chatName, currentUserId, chatPar
       });
     });
 
-    // Subscribe to online status
     const unsubStatus = MessageService.subscribeToOnlineStatus(chatId, (data) => {
       const { userId, status } = data;
       
@@ -169,13 +157,11 @@ export default function MessageWindow({ chatId, chatName, currentUserId, chatPar
       });
     });
 
-    // Send initial online status
     MessageService.sendOnlineStatus(chatId, currentUserId, 'online');
 
-    // Heartbeat per mantenere online
     const heartbeat = setInterval(() => {
       MessageService.sendOnlineStatus(chatId, currentUserId, 'online');
-    }, 20000); // Ogni 20 secondi
+    }, 20000);
   
     return () => {
       unsubTyping();
@@ -185,17 +171,13 @@ export default function MessageWindow({ chatId, chatName, currentUserId, chatPar
     };
   }, [chatId, currentUserId]);
 
-  // Handle typing
   const handleTyping = useCallback(() => {
-    // Invia "sta scrivendo"
     MessageService.sendTypingIndicator(chatId, currentUserId, true);
 
-    // Clear previous timeout
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current);
     }
 
-    // Set timeout per stop typing
     typingTimeoutRef.current = setTimeout(() => {
       MessageService.sendTypingIndicator(chatId, currentUserId, false);
     }, 2000);
@@ -206,7 +188,6 @@ export default function MessageWindow({ chatId, chatName, currentUserId, chatPar
     handleTyping();
   };
 
-  // Render typing indicator
   const renderTypingIndicator = () => {
     if (typingUsers.size === 0) return null;
 
@@ -227,15 +208,12 @@ export default function MessageWindow({ chatId, chatName, currentUserId, chatPar
     );
   };
 
-  // Online users count (escluso te stesso)
   const onlineCount = onlineUsers.size - (onlineUsers.has(currentUserId) ? 1 : 0);
   
-  // Auto scroll to bottom
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
-  // File preview URL management
   useEffect(() => {
     if (selectedFile) {
       const url = URL.createObjectURL(selectedFile);
@@ -246,18 +224,15 @@ export default function MessageWindow({ chatId, chatName, currentUserId, chatPar
     }
   }, [selectedFile]);
 
-  // Event handlers
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
     if (!ALLOWED_FILE_TYPES.includes(file.type)) {
       setError('Tipo di file non supportato');
       return;
     }
 
-    // Validate file size
     if (file.size > MAX_FILE_SIZE) {
       setError('File troppo grande (max 100MB)');
       return;
@@ -304,7 +279,6 @@ export default function MessageWindow({ chatId, chatName, currentUserId, chatPar
 
       MessageService.sendMessage(messageData);
 
-      // Reset form
       setNewMessage('');
       setSelectedFile(null);
       if (fileInputRef.current) {
@@ -325,17 +299,25 @@ export default function MessageWindow({ chatId, chatName, currentUserId, chatPar
     }
   };
 
-  // Render components
+  // Handler per aprire il modal
+  const openMediaModal = (url: string, type: 'image' | 'video') => {
+    setModalMedia({ url, type });
+  };
+
+  const closeMediaModal = () => {
+    setModalMedia(null);
+  };
+
   const renderImage = (message: ChatMessage) => (
     <div className={style["message-media"]}>
-      <div className={style["message-image-container"]}>
+      <div 
+        className={style["message-image-container"]}
+        onClick={() => openMediaModal(message.fileUrl || '', 'image')}
+      >
         <img
           src={message.fileUrl || ""}
           alt={message.fileName || 'Immagine condivisa'}
-          width={300}
-          height={300}
           className={style["message-image"]}
-          sizes="(max-width: 768px) 250px, 300px"
         />
       </div>
       {message.content && (
@@ -346,18 +328,21 @@ export default function MessageWindow({ chatId, chatName, currentUserId, chatPar
 
   const renderVideo = (message: ChatMessage) => (
     <div className={style["message-media"]}>
-      <video 
-        controls 
-        className={style["message-video"]}
-        preload="metadata"
-        aria-label={`Video: ${message.fileName || 'Video condiviso'}`}
-        style={{ maxWidth: '100%', height: 'auto' }}
+      <div 
+        className={style["message-video-container"]}
+        onClick={() => openMediaModal(message.fileUrl || '', 'video')}
       >
-        <source src={message.fileUrl} type="video/mp4" />
-        <source src={message.fileUrl} type="video/webm" />
-        <source src={message.fileUrl} type="video/quicktime" />
-        Il tuo browser non supporta i video.
-      </video>
+        <video 
+          className={style["message-video"]}
+          preload="metadata"
+          aria-label={`Video: ${message.fileName || 'Video condiviso'}`}
+        >
+          <source src={message.fileUrl} type="video/mp4" />
+          <source src={message.fileUrl} type="video/webm" />
+          <source src={message.fileUrl} type="video/quicktime" />
+        </video>
+        <div className={style["video-play-overlay"]}>▶</div>
+      </div>
       {message.content && (
         <div className={style["message-caption"]}>{message.content}</div>
       )}
@@ -420,13 +405,12 @@ export default function MessageWindow({ chatId, chatName, currentUserId, chatPar
     );
   };
 
-  // Loading and error states
   if (!chatId) {
     return <div className={style["message-window"]}>Seleziona una chat per iniziare</div>;
   }
 
   if (loading) {
-    return <div className={style["message-window"]}>Caricamento messaggi...</div>;
+    return <div className={style["message-window"]}></div>;
   }
 
   if (error && !messages.length) {
@@ -437,11 +421,9 @@ export default function MessageWindow({ chatId, chatName, currentUserId, chatPar
 
   return (
     <div className={style["message-window"]}>
-      {/* Header */}
       <div className={style.messageHeader}>
         <span>{chatName}</span>
         <div className={style["connection-status"]}>
-          {/* Online indicator per gruppi */}
           {chatParticipants.length > 2 && onlineCount > 0 && (
             <span className={style["online-count"]}>{onlineCount} online</span>
           )}
@@ -450,7 +432,6 @@ export default function MessageWindow({ chatId, chatName, currentUserId, chatPar
         </div>
       </div>
 
-      {/* Messages */}
       <div className={style.messages}>
         {messages.length === 0 ? (
           <div className={style["no-messages"]}>Nessun messaggio in questa chat</div>
@@ -478,12 +459,9 @@ export default function MessageWindow({ chatId, chatName, currentUserId, chatPar
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Typing Indicator */}
       {renderTypingIndicator()}
-      {/* File Preview */}
       {renderFilePreview()}
 
-      {/* Input Area */}
       <div id={style["message-input"]}>
         <input
           type="file"
@@ -534,7 +512,6 @@ export default function MessageWindow({ chatId, chatName, currentUserId, chatPar
         </div>
       </div>
 
-      {/* Status Messages */}
       {!isConnected && (
         <div className={style["connection-error"]}>
           Connessione WebSocket non disponibile
@@ -550,6 +527,33 @@ export default function MessageWindow({ chatId, chatName, currentUserId, chatPar
       {error && (
         <div className={style["error-message"]}>
           {error}
+        </div>
+      )}
+
+      {/* MODAL PER VISUALIZZARE MEDIA A TUTTO SCHERMO */}
+      {modalMedia && (
+        <div className={style["media-modal"]} onClick={closeMediaModal}>
+          <div className={style["modal-close"]}>
+            <IoClose />
+          </div>
+          <div className={style["modal-content"]} onClick={(e) => e.stopPropagation()}>
+            {modalMedia.type === 'image' ? (
+              <img 
+                src={modalMedia.url} 
+                alt="Immagine full screen" 
+                className={style["modal-image"]}
+              />
+            ) : (
+              <video 
+                src={modalMedia.url} 
+                controls 
+                autoPlay
+                className={style["modal-video"]}
+              >
+                Il tuo browser non supporta i video.
+              </video>
+            )}
+          </div>
         </div>
       )}
     </div>

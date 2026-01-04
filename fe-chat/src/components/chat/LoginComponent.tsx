@@ -1,4 +1,3 @@
-// Modifica LoginComponent.tsx per usare LoadingScreen
 import { useEffect, useState, useCallback } from 'react';
 import { AuthService } from '@/services';
 import { useRouter } from 'next/router';
@@ -13,7 +12,7 @@ const LoginComponent = () => {
   });
 
   const [loading, setLoading] = useState(false);
-  const [showLoading, setShowLoading] = useState(false); // Per animazione pecore
+  const [showLoading, setShowLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
 
@@ -28,21 +27,20 @@ const LoginComponent = () => {
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-  }, []);
+    // Pulisci errore quando l'utente modifica i campi
+    if (error) setError('');
+  }, [error]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
-    setShowLoading(true); // Mostra animazione pecore
 
     try {
-      const loginPromise = AuthService.login({
+      await AuthService.login({
         username: formData.username,
         password: formData.password
       });
-
-      await loginPromise;
 
       try {
         await AuthService.getProfile(formData.username);
@@ -50,23 +48,34 @@ const LoginComponent = () => {
         console.warn('Profile loading failed:', err);
       }
 
-      // Il LoadingScreen gestirà la transizione
+      // Mostra loading screen SOLO dopo login riuscito
+      setShowLoading(true);
+
     } catch (error) {
       console.log('Login error:', error);
-      setShowLoading(false); // Nascondi se errore
+      setLoading(false); // Ferma loading immediatamente
       
+      // Gestione errore migliorata - resta nella pagina
       if (axios.isAxiosError(error)) {
-        setError(error.response?.data?.message || error.message);
+        const status = error.response?.status;
+        if (status === 401 || status === 400) {
+          setError('Username o password non corretti');
+        } else if (status === 500) {
+          setError('Errore del server. Riprova più tardi.');
+        } else {
+          setError(error.response?.data?.message || 'Errore di connessione');
+        }
+      } else if (error instanceof Error) {
+        setError(error.message);
       } else {
-        setError('Errore di accesso. Riprova.');
+        setError('Errore sconosciuto. Riprova.');
       }
-    } finally {
-      setLoading(false);
     }
   };
 
   const handleLoadingComplete = () => {
     setFormData({username:"", password:""});
+    setLoading(false);
     router.replace('/chat');
   };
 
@@ -108,7 +117,11 @@ const LoginComponent = () => {
         >
           {loading ? 'Accesso...' : 'Accedi'}
         </button>
-        {error && <div className="error-message" aria-live="polite">{error}</div>}
+        {error && (
+          <div className="error-message" aria-live="polite">
+            {error}
+          </div>
+        )}
       </form>
 
       <div className="register-link">

@@ -45,60 +45,62 @@ function LoadingScreen(_a) {
     var _this = this;
     var onComplete = _a.onComplete;
     var _b = react_1.useState(0), progress = _b[0], setProgress = _b[1];
-    var _c = react_1.useState('Inizializzazione...'), status = _c[0], setStatus = _c[1];
-    var isLoadingRef = react_1.useRef(false); // ✨ Previene doppio caricamento
+    var isLoadingRef = react_1.useRef(false);
     react_1.useEffect(function () {
         if (isLoadingRef.current)
-            return; // ✨ Evita esecuzioni multiple
+            return;
         isLoadingRef.current = true;
         var preloadData = function () { return __awaiter(_this, void 0, void 0, function () {
-            var error_1;
+            var chatError_1, error_1;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        _a.trys.push([0, 4, , 5]);
-                        // Step 1: Connessione WebSocket (0-30%)
-                        setStatus('Connessione al server...');
-                        return [4 /*yield*/, new Promise(function (resolve) { return messageService_1.MessageService.initializeWebSocket().then(resolve); })];
+                        _a.trys.push([0, 6, , 7]);
+                        // Step 1: WebSocket (immediato)
+                        setProgress(10);
+                        return [4 /*yield*/, messageService_1.MessageService.initializeWebSocket()];
                     case 1:
                         _a.sent();
-                        setProgress(30);
-                        // Step 2: Caricamento chat (30-70%)
-                        setStatus('Caricamento chat...');
-                        return [4 /*yield*/, new Promise(function (resolve) { return services_1.ChatService.getUserChats().then(resolve); })];
+                        setProgress(40);
+                        _a.label = 2;
                     case 2:
-                        _a.sent();
-                        setProgress(70);
-                        // Step 3: Finalizzazione (70-100%)
-                        setStatus('Quasi pronto...');
-                        return [4 /*yield*/, new Promise(function (resolve) { return setTimeout(resolve, 500); })];
+                        _a.trys.push([2, 4, , 5]);
+                        return [4 /*yield*/, services_1.ChatService.getUserChats()];
                     case 3:
                         _a.sent();
-                        setProgress(100);
-                        // Completa il caricamento
-                        setTimeout(function () { return onComplete(); }, 300);
                         return [3 /*break*/, 5];
                     case 4:
-                        error_1 = _a.sent();
-                        console.error('Errore durante il precaricamento:', error_1);
-                        // Anche in caso di errore, completa il caricamento
-                        setProgress(100);
-                        setTimeout(function () { return onComplete(); }, 500);
-                        onComplete();
+                        chatError_1 = _a.sent();
+                        console.warn('No chats found (new user):', chatError_1);
                         return [3 /*break*/, 5];
-                    case 5: return [2 /*return*/];
+                    case 5:
+                        setProgress(90);
+                        // Step 3: Finalizza
+                        setProgress(100);
+                        // Completa SUBITO quando arriva a 100%
+                        setTimeout(function () { return onComplete(); }, 100);
+                        return [3 /*break*/, 7];
+                    case 6:
+                        error_1 = _a.sent();
+                        console.error('Critical error during preload:', error_1);
+                        // Anche in caso di errore critico, completa
+                        setProgress(100);
+                        setTimeout(function () { return onComplete(); }, 200);
+                        return [3 /*break*/, 7];
+                    case 7: return [2 /*return*/];
                 }
             });
         }); };
         preloadData();
-        return function () { isLoadingRef.current = false; };
-    }, []);
+        return function () {
+            isLoadingRef.current = false;
+        };
+    }, [onComplete]);
     return (React.createElement("div", { className: loading_module_css_1["default"].loadingContainer },
         React.createElement("div", { className: loading_module_css_1["default"].animationArea },
             React.createElement("div", { className: loading_module_css_1["default"].sheepWalkContainer },
                 React.createElement("div", { className: loading_module_css_1["default"].walkingSheep }, "\uD83D\uDC11"),
-                React.createElement("div", { className: loading_module_css_1["default"].ground })),
-            React.createElement("div", { className: loading_module_css_1["default"].loadingText }, status)),
+                React.createElement("div", { className: loading_module_css_1["default"].ground }))),
         React.createElement("div", { className: loading_module_css_1["default"].progressBar },
             React.createElement("div", { className: loading_module_css_1["default"].progressFill, style: { width: progress + "%" } })),
         React.createElement("div", { className: loading_module_css_1["default"].progressText },

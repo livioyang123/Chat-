@@ -763,37 +763,9 @@
 
 
 
-.message-image-container {
-  position: relative;
-  display: inline-block;
-  max-width: 300px;
-  max-height: 300px;
-  border-radius: 8px;
-  overflow: hidden;
-  cursor: pointer;
-  transition: transform 0.2s ease;
-}
-
-.message-image-container:hover {
-  transform: scale(1.02);
-}
-
-.message-image {
-  border-radius: 8px;
-  transition: transform 0.2s ease;
-  width: 100%;
-  height: 100%;
-  display: block;
-}
 
 
-.message-caption {
-  margin-top: 8px;
-  padding: 8px;
-  background: rgba(0, 0, 0, 0.05);
-  border-radius: 4px;
-  font-size: 14px;
-}
+
 
 /* Indicatore upload */
 .upload-progress {
@@ -824,41 +796,6 @@
   /* altri stili esistenti */
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .message-image-container {
-    max-width: 250px;
-    max-height: 250px;
-  }
-  
-  .message-video {
-    max-width: 250px;
-    max-height: 250px;
-  }
-  
-  .preview-image-container {
-    width: 60px;
-    height: 60px;
-  }
-  
-  .preview-video {
-    width: 60px;
-    height: 60px;
-  }
-  
-  .file-preview {
-    margin: 4px;
-    padding: 8px;
-    
-  }
-  
-  .preview-filename {
-    font-size: 13px;
-  }
-  
-  .preview-filesize {
-    font-size: 11px;
-  }
 
   /* Typing Indicator */
 .typing-indicator {
@@ -945,6 +882,187 @@
     opacity: 0.5;
   }
 }
+
+/* ... (mantieni tutti gli stili esistenti) ... */
+
+/* CORREZIONI PER DIMENSIONI UNIFORMI MEDIA */
+
+/* Container video/immagine con dimensioni fisse */
+.message-image-container {
+  position: relative;
+  max-width: 280px;
+  max-width: 200px;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  background-color: #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
+.message-video-container {
+  position: relative;
+  width: 280px;
+  height: 200px;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  background-color: #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.message-image-container:hover,
+.message-video-container:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Immagini con object-fit per riempire il container */
+.message-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Video con dimensioni fisse */
+.message-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none; /* Evita controls, solo click per modal */
+}
+
+/* Overlay play per video */
+.video-play-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 48px;
+  color: white;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+  opacity: 0.9;
+  transition: opacity 0.2s ease;
+}
+
+.message-video-container:hover .video-play-overlay {
+  opacity: 1;
+}
+
+/* MODAL FULL SCREEN */
+.media-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.95);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.2s ease;
+  cursor: pointer;
+}
+
+.modal-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  font-size: 36px;
+  color: white;
+  cursor: pointer;
+  z-index: 10000;
+  background-color: rgba(0, 0, 0, 0.5);
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease;
+}
+
+.modal-close:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.modal-content {
+  max-width: 90vw;
+  max-height: 90vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-image {
+  max-width: 100%;
+  max-height: 90vh;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.modal-video {
+  max-width: 100%;
+  max-height: 90vh;
+  border-radius: 8px;
+}
+
+/* Caption sotto media */
+.message-caption {
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+/* Fallback per chat list e message window (senza testo) */
+.chat-list-fallback,
+.message-window-fallback {
+  background: #f0f0f0;
+  opacity: 0.5;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 0.3; }
+}
+
+/* Responsive per mobile */
+@media (max-width: 768px) {
+  .message-image-container,
+  .message-video-container {
+    width: 220px;
+    height: 160px;
+  }
+  
+  .video-play-overlay {
+    font-size: 36px;
+  }
+  
+  .modal-close {
+    top: 10px;
+    right: 10px;
+    width: 40px;
+    height: 40px;
+    font-size: 28px;
+  }
+}
+
 
 

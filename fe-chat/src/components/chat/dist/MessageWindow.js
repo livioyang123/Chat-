@@ -48,7 +48,7 @@ var messageService_1 = require("@/services/messageService");
 var io5_1 = require("react-icons/io5");
 var image_1 = require("next/image");
 var chatWindow_module_css_1 = require("@/styles/chatWindow.module.css");
-var MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
+var MAX_FILE_SIZE = 100 * 1024 * 1024;
 var ALLOWED_FILE_TYPES = [
     'image/jpeg', 'image/png', 'image/gif', 'image/webp',
     'video/mp4', 'video/webm', 'video/mov'
@@ -56,7 +56,6 @@ var ALLOWED_FILE_TYPES = [
 function MessageWindow(_a) {
     var _this = this;
     var chatId = _a.chatId, chatName = _a.chatName, currentUserId = _a.currentUserId, chatParticipants = _a.chatParticipants;
-    // State
     var _b = react_1.useState([]), messages = _b[0], setMessages = _b[1];
     var _c = react_1.useState(false), loading = _c[0], setLoading = _c[1];
     var _d = react_1.useState(null), error = _d[0], setError = _d[1];
@@ -65,28 +64,26 @@ function MessageWindow(_a) {
     var _g = react_1.useState(null), selectedFile = _g[0], setSelectedFile = _g[1];
     var _h = react_1.useState(false), isUploading = _h[0], setIsUploading = _h[1];
     var _j = react_1.useState(null), filePreviewUrl = _j[0], setFilePreviewUrl = _j[1];
-    // Refs
+    var _k = react_1.useState(new Map()), typingUsers = _k[0], setTypingUsers = _k[1];
+    var _l = react_1.useState(new Set()), onlineUsers = _l[0], setOnlineUsers = _l[1];
+    // Modal state
+    var _m = react_1.useState(null), modalMedia = _m[0], setModalMedia = _m[1];
     var messagesEndRef = react_1.useRef(null);
     var unsubscribeRef = react_1.useRef(null);
     var connectionCallbackRef = react_1.useRef(null);
     var fileInputRef = react_1.useRef(null);
-    //typing status
-    var _k = react_1.useState(new Map()), typingUsers = _k[0], setTypingUsers = _k[1];
-    var _l = react_1.useState(new Set()), onlineUsers = _l[0], setOnlineUsers = _l[1];
     var typingTimeoutRef = react_1.useRef(null);
-    // Utils
     var scrollToBottom = function () {
         var _a;
         (_a = messagesEndRef.current) === null || _a === void 0 ? void 0 : _a.scrollIntoView({ behavior: 'smooth' });
     };
     var formatTimestamp = function (timestamp) {
-        // Parse ISO string e converti nel fuso orario locale
         var date = new Date(timestamp);
         return date.toLocaleTimeString('it-IT', {
             hour: '2-digit',
             minute: '2-digit',
             hour12: false,
-            timeZone: 'Europe/Rome' // Forza il timezone italiano
+            timeZone: 'Europe/Rome'
         });
     };
     var formatFileSize = function (bytes) {
@@ -97,7 +94,6 @@ function MessageWindow(_a) {
         var i = Math.floor(Math.log(bytes) / Math.log(k));
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     };
-    // WebSocket initialization
     react_1.useEffect(function () {
         var initWebSocket = function () { return __awaiter(_this, void 0, void 0, function () {
             var _a;
@@ -124,14 +120,11 @@ function MessageWindow(_a) {
             (_a = connectionCallbackRef.current) === null || _a === void 0 ? void 0 : _a.call(connectionCallbackRef);
         };
     }, []);
-    // Chat subscription management
     react_1.useEffect(function () {
         var _a;
         if (!chatId || !messageService_1.MessageService.isWebSocketConnected())
             return;
-        // Cleanup previous subscription
         (_a = unsubscribeRef.current) === null || _a === void 0 ? void 0 : _a.call(unsubscribeRef);
-        // Subscribe to new chat
         try {
             unsubscribeRef.current = messageService_1.MessageService.subscribeToChat(chatId, function (message) {
                 setMessages(function (prev) { return __spreadArrays(prev, [message]); });
@@ -145,7 +138,6 @@ function MessageWindow(_a) {
             (_a = unsubscribeRef.current) === null || _a === void 0 ? void 0 : _a.call(unsubscribeRef);
         };
     }, [chatId, isConnected]);
-    // Load existing messages
     react_1.useEffect(function () {
         if (!chatId) {
             setMessages([]);
@@ -180,15 +172,13 @@ function MessageWindow(_a) {
         }); };
         loadMessages();
     }, [chatId]);
-    //subscribe typing indicator
     react_1.useEffect(function () {
         if (!chatId || !messageService_1.MessageService.isWebSocketConnected())
             return;
-        // Subscribe to typing indicator
         var unsubTyping = messageService_1.MessageService.subscribeToTyping(chatId, function (data) {
             var userId = data.userId, username = data.username, isTyping = data.isTyping;
             if (userId === currentUserId)
-                return; // Ignora te stesso
+                return;
             setTypingUsers(function (prev) {
                 var newMap = new Map(prev);
                 if (isTyping && username) {
@@ -200,7 +190,6 @@ function MessageWindow(_a) {
                 return newMap;
             });
         });
-        // Subscribe to online status
         var unsubStatus = messageService_1.MessageService.subscribeToOnlineStatus(chatId, function (data) {
             var userId = data.userId, status = data.status;
             setOnlineUsers(function (prev) {
@@ -214,12 +203,10 @@ function MessageWindow(_a) {
                 return newSet;
             });
         });
-        // Send initial online status
         messageService_1.MessageService.sendOnlineStatus(chatId, currentUserId, 'online');
-        // Heartbeat per mantenere online
         var heartbeat = setInterval(function () {
             messageService_1.MessageService.sendOnlineStatus(chatId, currentUserId, 'online');
-        }, 20000); // Ogni 20 secondi
+        }, 20000);
         return function () {
             unsubTyping();
             unsubStatus();
@@ -227,15 +214,11 @@ function MessageWindow(_a) {
             messageService_1.MessageService.sendOnlineStatus(chatId, currentUserId, 'offline');
         };
     }, [chatId, currentUserId]);
-    // Handle typing
     var handleTyping = react_1.useCallback(function () {
-        // Invia "sta scrivendo"
         messageService_1.MessageService.sendTypingIndicator(chatId, currentUserId, true);
-        // Clear previous timeout
         if (typingTimeoutRef.current) {
             clearTimeout(typingTimeoutRef.current);
         }
-        // Set timeout per stop typing
         typingTimeoutRef.current = setTimeout(function () {
             messageService_1.MessageService.sendTypingIndicator(chatId, currentUserId, false);
         }, 2000);
@@ -244,7 +227,6 @@ function MessageWindow(_a) {
         setNewMessage(e.target.value);
         handleTyping();
     };
-    // Render typing indicator
     var renderTypingIndicator = function () {
         if (typingUsers.size === 0)
             return null;
@@ -261,13 +243,10 @@ function MessageWindow(_a) {
                 React.createElement("span", null, "."),
                 React.createElement("span", null, "."))));
     };
-    // Online users count (escluso te stesso)
     var onlineCount = onlineUsers.size - (onlineUsers.has(currentUserId) ? 1 : 0);
-    // Auto scroll to bottom
     react_1.useEffect(function () {
         scrollToBottom();
     }, [messages]);
-    // File preview URL management
     react_1.useEffect(function () {
         if (selectedFile) {
             var url_1 = URL.createObjectURL(selectedFile);
@@ -278,18 +257,15 @@ function MessageWindow(_a) {
             setFilePreviewUrl(null);
         }
     }, [selectedFile]);
-    // Event handlers
     var handleFileSelect = function (event) {
         var _a;
         var file = (_a = event.target.files) === null || _a === void 0 ? void 0 : _a[0];
         if (!file)
             return;
-        // Validate file type
         if (!ALLOWED_FILE_TYPES.includes(file.type)) {
             setError('Tipo di file non supportato');
             return;
         }
-        // Validate file size
         if (file.size > MAX_FILE_SIZE) {
             setError('File troppo grande (max 100MB)');
             return;
@@ -338,7 +314,6 @@ function MessageWindow(_a) {
                     _b.label = 4;
                 case 4:
                     messageService_1.MessageService.sendMessage(messageData);
-                    // Reset form
                     setNewMessage('');
                     setSelectedFile(null);
                     if (fileInputRef.current) {
@@ -362,17 +337,24 @@ function MessageWindow(_a) {
             sendMessage();
         }
     };
-    // Render components
+    // Handler per aprire il modal
+    var openMediaModal = function (url, type) {
+        setModalMedia({ url: url, type: type });
+    };
+    var closeMediaModal = function () {
+        setModalMedia(null);
+    };
     var renderImage = function (message) { return (React.createElement("div", { className: chatWindow_module_css_1["default"]["message-media"] },
-        React.createElement("div", { className: chatWindow_module_css_1["default"]["message-image-container"] },
-            React.createElement("img", { src: message.fileUrl || "", alt: message.fileName || 'Immagine condivisa', width: 300, height: 300, className: chatWindow_module_css_1["default"]["message-image"], sizes: "(max-width: 768px) 250px, 300px" })),
+        React.createElement("div", { className: chatWindow_module_css_1["default"]["message-image-container"], onClick: function () { return openMediaModal(message.fileUrl || '', 'image'); } },
+            React.createElement("img", { src: message.fileUrl || "", alt: message.fileName || 'Immagine condivisa', className: chatWindow_module_css_1["default"]["message-image"] })),
         message.content && (React.createElement("div", { className: chatWindow_module_css_1["default"]["message-caption"] }, message.content)))); };
     var renderVideo = function (message) { return (React.createElement("div", { className: chatWindow_module_css_1["default"]["message-media"] },
-        React.createElement("video", { controls: true, className: chatWindow_module_css_1["default"]["message-video"], preload: "metadata", "aria-label": "Video: " + (message.fileName || 'Video condiviso'), style: { maxWidth: '100%', height: 'auto' } },
-            React.createElement("source", { src: message.fileUrl, type: "video/mp4" }),
-            React.createElement("source", { src: message.fileUrl, type: "video/webm" }),
-            React.createElement("source", { src: message.fileUrl, type: "video/quicktime" }),
-            "Il tuo browser non supporta i video."),
+        React.createElement("div", { className: chatWindow_module_css_1["default"]["message-video-container"], onClick: function () { return openMediaModal(message.fileUrl || '', 'video'); } },
+            React.createElement("video", { className: chatWindow_module_css_1["default"]["message-video"], preload: "metadata", "aria-label": "Video: " + (message.fileName || 'Video condiviso') },
+                React.createElement("source", { src: message.fileUrl, type: "video/mp4" }),
+                React.createElement("source", { src: message.fileUrl, type: "video/webm" }),
+                React.createElement("source", { src: message.fileUrl, type: "video/quicktime" })),
+            React.createElement("div", { className: chatWindow_module_css_1["default"]["video-play-overlay"] }, "\u25B6")),
         message.content && (React.createElement("div", { className: chatWindow_module_css_1["default"]["message-caption"] }, message.content)))); };
     var renderMessageContent = function (message) {
         switch (message.type) {
@@ -397,12 +379,11 @@ function MessageWindow(_a) {
                 React.createElement("button", { onClick: removeSelectedFile, className: chatWindow_module_css_1["default"]["preview-remove"], type: "button", title: "Rimuovi file selezionato", "aria-label": "Rimuovi file selezionato" },
                     React.createElement(io5_1.IoClose, null)))));
     };
-    // Loading and error states
     if (!chatId) {
         return React.createElement("div", { className: chatWindow_module_css_1["default"]["message-window"] }, "Seleziona una chat per iniziare");
     }
     if (loading) {
-        return React.createElement("div", { className: chatWindow_module_css_1["default"]["message-window"] }, "Caricamento messaggi...");
+        return React.createElement("div", { className: chatWindow_module_css_1["default"]["message-window"] });
     }
     if (error && !messages.length) {
         return React.createElement("div", { className: chatWindow_module_css_1["default"]["message-window"] + " " + chatWindow_module_css_1["default"].error }, error);
@@ -440,6 +421,10 @@ function MessageWindow(_a) {
                 }, "aria-label": "Invia messaggio", title: "Invia messaggio" }, isUploading ? '...' : React.createElement(io5_1.IoSendSharp, null))),
         !isConnected && (React.createElement("div", { className: chatWindow_module_css_1["default"]["connection-error"] }, "Connessione WebSocket non disponibile")),
         isUploading && (React.createElement("div", { className: chatWindow_module_css_1["default"]["upload-progress"] }, "Caricamento file in corso...")),
-        error && (React.createElement("div", { className: chatWindow_module_css_1["default"]["error-message"] }, error))));
+        error && (React.createElement("div", { className: chatWindow_module_css_1["default"]["error-message"] }, error)),
+        modalMedia && (React.createElement("div", { className: chatWindow_module_css_1["default"]["media-modal"], onClick: closeMediaModal },
+            React.createElement("div", { className: chatWindow_module_css_1["default"]["modal-close"] },
+                React.createElement(io5_1.IoClose, null)),
+            React.createElement("div", { className: chatWindow_module_css_1["default"]["modal-content"], onClick: function (e) { return e.stopPropagation(); } }, modalMedia.type === 'image' ? (React.createElement("img", { src: modalMedia.url, alt: "Immagine full screen", className: chatWindow_module_css_1["default"]["modal-image"] })) : (React.createElement("video", { src: modalMedia.url, controls: true, autoPlay: true, className: chatWindow_module_css_1["default"]["modal-video"] }, "Il tuo browser non supporta i video.")))))));
 }
 exports["default"] = MessageWindow;

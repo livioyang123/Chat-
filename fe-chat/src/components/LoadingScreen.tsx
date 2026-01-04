@@ -10,46 +10,49 @@ interface LoadingScreenProps {
 
 export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
   const [progress, setProgress] = useState(0);
-  const [status, setStatus] = useState('Inizializzazione...');
-  const isLoadingRef = useRef(false); // ✨ Previene doppio caricamento
+  const isLoadingRef = useRef(false);
 
   useEffect(() => {
-    if (isLoadingRef.current) return; // ✨ Evita esecuzioni multiple
+    if (isLoadingRef.current) return;
     isLoadingRef.current = true;
+
     const preloadData = async () => {
       try {
-        // Step 1: Connessione WebSocket (0-30%)
-        setStatus('Connessione al server...');
-        await new Promise(resolve => MessageService.initializeWebSocket().then(resolve));
-        setProgress(30);
+        // Step 1: WebSocket (immediato)
+        setProgress(10);
+        await MessageService.initializeWebSocket();
+        setProgress(40);
 
-        // Step 2: Caricamento chat (30-70%)
-        setStatus('Caricamento chat...');
-        await new Promise(resolve => ChatService.getUserChats().then(resolve));
-        setProgress(70);
+        // Step 2: Chat (può essere vuoto per nuovi utenti)
+        try {
+          await ChatService.getUserChats();
+        } catch (chatError) {
+          console.warn('No chats found (new user):', chatError);
+          // Non è un errore critico
+        }
+        setProgress(90);
 
-        // Step 3: Finalizzazione (70-100%)
-        setStatus('Quasi pronto...');
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // Step 3: Finalizza
         setProgress(100);
-
-        // Completa il caricamento
-        setTimeout(() => onComplete(), 300);
+        
+        // Completa SUBITO quando arriva a 100%
+        setTimeout(() => onComplete(), 100);
 
       } catch (error) {
-        console.error('Errore durante il precaricamento:', error);
-        // Anche in caso di errore, completa il caricamento
+        console.error('Critical error during preload:', error);
+        // Anche in caso di errore critico, completa
         setProgress(100);
-        setTimeout(() => onComplete(), 500);
-        onComplete();
+        setTimeout(() => onComplete(), 200);
       }
     };
 
     preloadData();
 
-    return () => { isLoadingRef.current = false; };
+    return () => { 
+      isLoadingRef.current = false; 
+    };
 
-  }, []);
+  }, [onComplete]);
 
   return (
     <div className={styles.loadingContainer}>
@@ -58,7 +61,6 @@ export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
           <div className={styles.walkingSheep}>🐑</div>
           <div className={styles.ground}></div>
         </div>
-        <div className={styles.loadingText}>{status}</div>
       </div>
 
       <div className={styles.progressBar}>
