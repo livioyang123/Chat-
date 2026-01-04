@@ -14,23 +14,31 @@ import java.util.Optional;
 public class MessageService {
 
     private final MessageRepo messageRepository;
+    private final RedisCacheService redisCacheService; // ✨ NUOVO
 
     public Message saveMessage(Message message) {
         Message m = new Message(message);
         m.setTimestamp(LocalDateTime.now());
-        return messageRepository.save(m);
+        Message savedMessage = messageRepository.save(m);
+        try {
+            redisCacheService.refreshChatMessagesCache(savedMessage.getChatRoomId());
+        } catch (Exception e) {
+            // TODO: handle exception
+            System.err.println("⚠️ Redis refresh failed: " + e.getMessage());
+        }
+        return savedMessage;
     }
 
     public List<Message> getMessagesByRoom(String roomId) {
-        return messageRepository.findByChatRoomIdOrderByTimestampAsc(roomId);
+        return redisCacheService.getChatMessages(roomId);
     }
 
     public List<Message> getAllMessages() {
         return messageRepository.findAll();
     }
 
-    public Optional<Message> getMessageById(String id) {
-        return messageRepository.findById(id);
+    public List<Message> getMessageById(String id) {
+        return redisCacheService.getMessagesById(id);
     }
 
     public List<Message> getMessagesByChatRoomId(String chatRoomId) {

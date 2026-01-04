@@ -25,6 +25,7 @@ import org.springframework.security.core.userdetails.User.UserBuilder;
 public class UserService implements UserDetailsService {
 
     private final UserRepo userRepository;
+    private final RedisCacheService redisCacheService; // ✨ NUOVO
 
     public List<User> getAllUsers() {
         return userRepository.findAll();
@@ -32,22 +33,31 @@ public class UserService implements UserDetailsService {
 
     @Cacheable(value = "users", key = "#id")
     public Optional<User> getUserById(String id) {
-        return userRepository.findById(id);
+        return redisCacheService.getUserFromCache(id).isPresent() ?
+               redisCacheService.getUserFromCache(id) :
+               userRepository.findById(id);
     }
 
     @Cacheable(value = "users", key = "#username")
     public User getUserByUsername(String username) {
-        return userRepository.findByUsername(username);
+        User user = userRepository.findByUsername(username);
+        if (user != null) {
+            redisCacheService.cacheUser(user.getId(), user);
+        }
+        return user;
     }
 
     @CacheEvict(value = "users", key = "#id")
     public void deleteUserById(String id) {
         userRepository.deleteById(id);
+        redisCacheService.invalidateUserCache(id);
     }
 
     @CachePut(value = "users", key = "#user.id")
     public User saveUser(User user) {
-        return userRepository.save(user);
+        User savedUser = userRepository.save(user);
+        redisCacheService.cacheUser(savedUser.getId(), savedUser);
+        return userRepository.save(savedUser);
     }
 
     public boolean userExistsByUsername(String username) {

@@ -48,9 +48,7 @@ public class MessageController {
 
     @GetMapping("/{id}")
     public ResponseEntity<Message> getMessageById(@PathVariable String id) {
-        return messageService.getMessageById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        return ResponseEntity.ok(messageService.getMessageById(id).get(0));
     }
 
     @GetMapping

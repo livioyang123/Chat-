@@ -46,7 +46,11 @@ function LoadingScreen(_a) {
     var onComplete = _a.onComplete;
     var _b = react_1.useState(0), progress = _b[0], setProgress = _b[1];
     var _c = react_1.useState('Inizializzazione...'), status = _c[0], setStatus = _c[1];
+    var isLoadingRef = react_1.useRef(false); // ✨ Previene doppio caricamento
     react_1.useEffect(function () {
+        if (isLoadingRef.current)
+            return; // ✨ Evita esecuzioni multiple
+        isLoadingRef.current = true;
         var preloadData = function () { return __awaiter(_this, void 0, void 0, function () {
             var error_1;
             return __generator(this, function (_a) {
@@ -55,13 +59,13 @@ function LoadingScreen(_a) {
                         _a.trys.push([0, 4, , 5]);
                         // Step 1: Connessione WebSocket (0-30%)
                         setStatus('Connessione al server...');
-                        return [4 /*yield*/, messageService_1.MessageService.initializeWebSocket()];
+                        return [4 /*yield*/, new Promise(function (resolve) { return messageService_1.MessageService.initializeWebSocket().then(resolve); })];
                     case 1:
                         _a.sent();
                         setProgress(30);
                         // Step 2: Caricamento chat (30-70%)
                         setStatus('Caricamento chat...');
-                        return [4 /*yield*/, services_1.ChatService.getUserChats()];
+                        return [4 /*yield*/, new Promise(function (resolve) { return services_1.ChatService.getUserChats().then(resolve); })];
                     case 2:
                         _a.sent();
                         setProgress(70);
@@ -80,13 +84,15 @@ function LoadingScreen(_a) {
                         // Anche in caso di errore, completa il caricamento
                         setProgress(100);
                         setTimeout(function () { return onComplete(); }, 500);
+                        onComplete();
                         return [3 /*break*/, 5];
                     case 5: return [2 /*return*/];
                 }
             });
         }); };
         preloadData();
-    }, [onComplete]);
+        return function () { isLoadingRef.current = false; };
+    }, []);
     return (React.createElement("div", { className: loading_module_css_1["default"].loadingContainer },
         React.createElement("div", { className: loading_module_css_1["default"].animationArea },
             React.createElement("div", { className: loading_module_css_1["default"].sheepWalkContainer },

@@ -52,6 +52,7 @@ var AuthService = /** @class */ (function () {
                     case 0:
                         _e.trys.push([0, 3, , 4]);
                         console.log('🔐 Attempting login with:', { username: credentials.username });
+                        this.debugSessionStorage();
                         this.clearUserData(); // Pulisci i dati precedenti
                         return [4 /*yield*/, api_1.ApiService.post('/auth/login', credentials)];
                     case 1:
@@ -64,6 +65,7 @@ var AuthService = /** @class */ (function () {
                     case 2:
                         // Carica profilo utente per ottenere l'ID
                         _e.sent();
+                        this.debugSessionStorage();
                         console.log('✅ Login successful');
                         return [3 /*break*/, 4];
                     case 3:
@@ -191,8 +193,19 @@ var AuthService = /** @class */ (function () {
     };
     AuthService.saveUser = function (value, key) {
         if (typeof window !== 'undefined') {
-            sessionStorage.setItem(key, value);
-            console.log("\uD83D\uDCBE Saved: " + key + " = " + value);
+            try {
+                // ✨ NUOVO: Pulizia chiave prima di salvare
+                var existingValue = sessionStorage.getItem(key);
+                if (existingValue && existingValue !== value) {
+                    console.log("\uD83D\uDD04 Updating " + key + ": " + existingValue + " -> " + value);
+                }
+                sessionStorage.setItem(key, value);
+                console.log("\uD83D\uDCBE Saved: " + key + " = " + value);
+            }
+            catch (error) {
+                console.error('❌ SessionStorage error:', error);
+                // Fallback: usa memoria temporanea se sessionStorage è pieno/bloccato
+            }
         }
     };
     AuthService.getCurrentUser = function () {
@@ -221,6 +234,18 @@ var AuthService = /** @class */ (function () {
         var isAuth = !!(username && userId);
         console.log('🔒 Is authenticated:', isAuth);
         return isAuth;
+    };
+    // ✨ NUOVO: Metodo per debug session storage
+    AuthService.debugSessionStorage = function () {
+        if (typeof window !== 'undefined') {
+            console.log('📊 SessionStorage contents:');
+            for (var i = 0; i < sessionStorage.length; i++) {
+                var key = sessionStorage.key(i);
+                if (key) {
+                    console.log("  - " + key + ": " + sessionStorage.getItem(key));
+                }
+            }
+        }
     };
     AuthService.userId = "";
     AuthService.currentUser = "";

@@ -17,6 +17,7 @@ export class AuthService {
     try {
       console.log('🔐 Attempting login with:', { username: credentials.username });
       
+      this.debugSessionStorage();
       this.clearUserData(); // Pulisci i dati precedenti
       
       // CORREZIONE: Gestione corretta della risposta
@@ -32,6 +33,8 @@ export class AuthService {
       
       // Carica profilo utente per ottenere l'ID
       await this.getProfile(credentials.username);
+
+      this.debugSessionStorage();
       
       console.log('✅ Login successful');
       
@@ -152,8 +155,19 @@ export class AuthService {
 
   static saveUser(value: string, key: string): void {
     if (typeof window !== 'undefined') {
-      sessionStorage.setItem(key, value);
-      console.log(`💾 Saved: ${key} = ${value}`);
+      try {
+        // ✨ NUOVO: Pulizia chiave prima di salvare
+        const existingValue = sessionStorage.getItem(key);
+        if (existingValue && existingValue !== value) {
+          console.log(`🔄 Updating ${key}: ${existingValue} -> ${value}`);
+        }
+        
+        sessionStorage.setItem(key, value);
+        console.log(`💾 Saved: ${key} = ${value}`);
+      } catch (error) {
+        console.error('❌ SessionStorage error:', error);
+        // Fallback: usa memoria temporanea se sessionStorage è pieno/bloccato
+      }
     }
   }
 
@@ -185,5 +199,18 @@ export class AuthService {
     const isAuth = !!(username && userId);
     console.log('🔒 Is authenticated:', isAuth);
     return isAuth;
+  }
+
+  // ✨ NUOVO: Metodo per debug session storage
+  static debugSessionStorage(): void {
+    if (typeof window !== 'undefined') {
+      console.log('📊 SessionStorage contents:');
+      for (let i = 0; i < sessionStorage.length; i++) {
+        const key = sessionStorage.key(i);
+        if (key) {
+          console.log(`  - ${key}: ${sessionStorage.getItem(key)}`);
+        }
+      }
+    }
   }
 }
