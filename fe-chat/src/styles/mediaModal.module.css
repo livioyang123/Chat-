@@ -1,0 +1,86 @@
+/* ========================================
+   MEDIA MODAL (Full Screen)
+   ======================================== */
+
+.media-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.95);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.2s ease;
+  cursor: pointer;
+}
+
+.modal-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  font-size: 36px;
+  color: white;
+  cursor: pointer;
+  z-index: 10000;
+  background-color: rgba(0, 0, 0, 0.5);
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease;
+}
+
+.modal-close:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.modal-content {
+  max-width: 90vw;
+  max-height: 90vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-image {
+  max-width: 100%;
+  max-height: 90vh;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.modal-video {
+  max-width: 100%;
+  max-height: 90vh;
+  border-radius: 8px;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .modal-close {
+    top: 10px;
+    right: 10px;
+    width: 40px;
+    height: 40px;
+    font-size: 28px;
+  }
+  
+  .modal-content {
+    max-width: 95vw;
+    max-height: 95vh;
+  }
+}

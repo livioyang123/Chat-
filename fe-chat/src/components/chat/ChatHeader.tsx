@@ -3,7 +3,7 @@ import { AiOutlineMore } from "react-icons/ai";
 import { MdGroups3 } from "react-icons/md";
 import { GiAngelOutfit } from "react-icons/gi";
 import { MdOutlineAddCircleOutline } from "react-icons/md";
-import style from "@/styles/chatWindow.module.css";
+import style from "@/styles/chatHeader.module.css";
 
 interface ChatHeaderProps {
     onBtnClick: (condition: boolean) => void;
@@ -15,7 +15,7 @@ export default function ChatHeader({ onBtnClick, onAddFriendClick }: ChatHeaderP
     const dropdownRef = useRef<HTMLDivElement | null>(null);
 
     const logout = () => {
-        window.location.href = "/"; // Redirect to login page
+        window.location.href = "/";
     };
 
     useEffect(() => {

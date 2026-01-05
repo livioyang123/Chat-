@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import type { ChatRoom } from '@/types/api';
 import ModalCreateGroup from './ModalCreateGroup';
 import ModalAddFriend from './ModalAddFriend';
-import style from "@/styles/chatWindow.module.css";
+import style from "@/styles/chatList.module.css";
 import ChatHeader from '@/components/chat/ChatHeader';
 
 interface ChatListProps {
@@ -60,9 +60,7 @@ export default function ChatList({ onButtonClick }: ChatListProps) {
             className={style["chat-item"]}
             onClick={() => onButtonClick(chat.id, chat.name, chat.participantIds)}
           >
-            <div className={style["avatar-container"]}>
-              {/* Qui puoi inserire l'immagine o l'avatar del gruppo */}
-            </div>
+            
             <div className={style["chat-info"]}>
               <h1 className={style["chat-name"]}>
                 {chat.name}

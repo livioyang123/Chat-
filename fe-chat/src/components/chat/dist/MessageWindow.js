@@ -47,7 +47,9 @@ var react_1 = require("react");
 var messageService_1 = require("@/services/messageService");
 var io5_1 = require("react-icons/io5");
 var image_1 = require("next/image");
-var chatWindow_module_css_1 = require("@/styles/chatWindow.module.css");
+var messageWindow_module_css_1 = require("@/styles/messageWindow.module.css");
+var messageInput_module_css_1 = require("@/styles/messageInput.module.css");
+var mediaModal_module_css_1 = require("@/styles/mediaModal.module.css");
 var MAX_FILE_SIZE = 100 * 1024 * 1024;
 var ALLOWED_FILE_TYPES = [
     'image/jpeg', 'image/png', 'image/gif', 'image/webp',
@@ -236,9 +238,9 @@ function MessageWindow(_a) {
             : names.length === 2
                 ? names[0] + " e " + names[1] + " stanno scrivendo..."
                 : names[0] + " e altri stanno scrivendo...";
-        return (React.createElement("div", { className: chatWindow_module_css_1["default"]["typing-indicator"] },
+        return (React.createElement("div", { className: messageWindow_module_css_1["default"]["typing-indicator"] },
             React.createElement("span", null, text),
-            React.createElement("span", { className: chatWindow_module_css_1["default"]["typing-dots"] },
+            React.createElement("span", { className: messageWindow_module_css_1["default"]["typing-dots"] },
                 React.createElement("span", null, "."),
                 React.createElement("span", null, "."),
                 React.createElement("span", null, "."))));
@@ -344,18 +346,18 @@ function MessageWindow(_a) {
     var closeMediaModal = function () {
         setModalMedia(null);
     };
-    var renderImage = function (message) { return (React.createElement("div", { className: chatWindow_module_css_1["default"]["message-media"] },
-        React.createElement("div", { className: chatWindow_module_css_1["default"]["message-image-container"], onClick: function () { return openMediaModal(message.fileUrl || '', 'image'); } },
-            React.createElement("img", { src: message.fileUrl || "", alt: message.fileName || 'Immagine condivisa', className: chatWindow_module_css_1["default"]["message-image"] })),
-        message.content && (React.createElement("div", { className: chatWindow_module_css_1["default"]["message-caption"] }, message.content)))); };
-    var renderVideo = function (message) { return (React.createElement("div", { className: chatWindow_module_css_1["default"]["message-media"] },
-        React.createElement("div", { className: chatWindow_module_css_1["default"]["message-video-container"], onClick: function () { return openMediaModal(message.fileUrl || '', 'video'); } },
-            React.createElement("video", { className: chatWindow_module_css_1["default"]["message-video"], preload: "metadata", "aria-label": "Video: " + (message.fileName || 'Video condiviso') },
+    var renderImage = function (message) { return (React.createElement("div", { className: messageWindow_module_css_1["default"]["message-media"] },
+        React.createElement("div", { className: messageWindow_module_css_1["default"]["message-image-container"], onClick: function () { return openMediaModal(message.fileUrl || '', 'image'); } },
+            React.createElement("img", { src: message.fileUrl || "", alt: message.fileName || 'Immagine condivisa', className: messageWindow_module_css_1["default"]["message-image"] })),
+        message.content && (React.createElement("div", { className: messageWindow_module_css_1["default"]["message-caption"] }, message.content)))); };
+    var renderVideo = function (message) { return (React.createElement("div", { className: messageWindow_module_css_1["default"]["message-media"] },
+        React.createElement("div", { className: messageWindow_module_css_1["default"]["message-video-container"], onClick: function () { return openMediaModal(message.fileUrl || '', 'video'); } },
+            React.createElement("video", { className: messageWindow_module_css_1["default"]["message-video"], preload: "metadata", "aria-label": "Video: " + (message.fileName || 'Video condiviso') },
                 React.createElement("source", { src: message.fileUrl, type: "video/mp4" }),
                 React.createElement("source", { src: message.fileUrl, type: "video/webm" }),
                 React.createElement("source", { src: message.fileUrl, type: "video/quicktime" })),
-            React.createElement("div", { className: chatWindow_module_css_1["default"]["video-play-overlay"] }, "\u25B6")),
-        message.content && (React.createElement("div", { className: chatWindow_module_css_1["default"]["message-caption"] }, message.content)))); };
+            React.createElement("div", { className: messageWindow_module_css_1["default"]["video-play-overlay"] }, "\u25B6")),
+        message.content && (React.createElement("div", { className: messageWindow_module_css_1["default"]["message-caption"] }, message.content)))); };
     var renderMessageContent = function (message) {
         switch (message.type) {
             case 'IMAGE':
@@ -363,68 +365,68 @@ function MessageWindow(_a) {
             case 'VIDEO':
                 return renderVideo(message);
             default:
-                return React.createElement("div", { className: chatWindow_module_css_1["default"]["message-text"] }, message.content);
+                return React.createElement("div", { className: messageWindow_module_css_1["default"]["message-text"] }, message.content);
         }
     };
     var renderFilePreview = function () {
         if (!selectedFile || !filePreviewUrl)
             return null;
-        return (React.createElement("div", { className: chatWindow_module_css_1["default"]["file-preview"] },
-            React.createElement("div", { className: chatWindow_module_css_1["default"]["preview-content"] },
-                React.createElement("div", { className: chatWindow_module_css_1["default"]["preview-media"] }, selectedFile.type.startsWith('image/') ? (React.createElement("div", { className: chatWindow_module_css_1["default"]["preview-image-container"] },
-                    React.createElement(image_1["default"], { src: filePreviewUrl, alt: "Anteprima immagine selezionata", width: 80, height: 80, className: chatWindow_module_css_1["default"]["preview-image"], style: { objectFit: 'cover' } }))) : (React.createElement("video", { src: filePreviewUrl, className: chatWindow_module_css_1["default"]["preview-video"], muted: true, "aria-label": "Anteprima video selezionato" }))),
-                React.createElement("div", { className: chatWindow_module_css_1["default"]["preview-info"] },
-                    React.createElement("div", { className: chatWindow_module_css_1["default"]["preview-filename"] }, selectedFile.name),
-                    React.createElement("div", { className: chatWindow_module_css_1["default"]["preview-filesize"] }, formatFileSize(selectedFile.size))),
-                React.createElement("button", { onClick: removeSelectedFile, className: chatWindow_module_css_1["default"]["preview-remove"], type: "button", title: "Rimuovi file selezionato", "aria-label": "Rimuovi file selezionato" },
+        return (React.createElement("div", { className: messageInput_module_css_1["default"]["file-preview"] },
+            React.createElement("div", { className: messageInput_module_css_1["default"]["preview-content"] },
+                React.createElement("div", { className: messageInput_module_css_1["default"]["preview-media"] }, selectedFile.type.startsWith('image/') ? (React.createElement("div", { className: messageInput_module_css_1["default"]["preview-image-container"] },
+                    React.createElement(image_1["default"], { src: filePreviewUrl, alt: "Anteprima immagine selezionata", width: 80, height: 80, className: messageInput_module_css_1["default"]["preview-image"], style: { objectFit: 'cover' } }))) : (React.createElement("video", { src: filePreviewUrl, className: messageInput_module_css_1["default"]["preview-video"], muted: true, "aria-label": "Anteprima video selezionato" }))),
+                React.createElement("div", { className: messageInput_module_css_1["default"]["preview-info"] },
+                    React.createElement("div", { className: messageInput_module_css_1["default"]["preview-filename"] }, selectedFile.name),
+                    React.createElement("div", { className: messageInput_module_css_1["default"]["preview-filesize"] }, formatFileSize(selectedFile.size))),
+                React.createElement("button", { onClick: removeSelectedFile, className: messageInput_module_css_1["default"]["preview-remove"], type: "button", title: "Rimuovi file selezionato", "aria-label": "Rimuovi file selezionato" },
                     React.createElement(io5_1.IoClose, null)))));
     };
     if (!chatId) {
-        return React.createElement("div", { className: chatWindow_module_css_1["default"]["message-window"] }, "Seleziona una chat per iniziare");
+        return React.createElement("div", { className: messageWindow_module_css_1["default"]["message-window"] }, "Seleziona una chat per iniziare");
     }
     if (loading) {
-        return React.createElement("div", { className: chatWindow_module_css_1["default"]["message-window"] });
+        return React.createElement("div", { className: messageWindow_module_css_1["default"]["message-window"] });
     }
     if (error && !messages.length) {
-        return React.createElement("div", { className: chatWindow_module_css_1["default"]["message-window"] + " " + chatWindow_module_css_1["default"].error }, error);
+        return React.createElement("div", { className: messageWindow_module_css_1["default"]["message-window"] + " " + messageWindow_module_css_1["default"].error }, error);
     }
     var canSend = (newMessage.trim() || selectedFile) && isConnected && !isUploading;
-    return (React.createElement("div", { className: chatWindow_module_css_1["default"]["message-window"] },
-        React.createElement("div", { className: chatWindow_module_css_1["default"].messageHeader },
+    return (React.createElement("div", { className: messageWindow_module_css_1["default"]["message-window"] },
+        React.createElement("div", { className: messageWindow_module_css_1["default"].messageHeader },
             React.createElement("span", null, chatName),
-            React.createElement("div", { className: chatWindow_module_css_1["default"]["connection-status"] },
-                chatParticipants.length > 2 && onlineCount > 0 && (React.createElement("span", { className: chatWindow_module_css_1["default"]["online-count"] },
+            React.createElement("div", { className: messageWindow_module_css_1["default"]["connection-status"] },
+                chatParticipants.length > 2 && onlineCount > 0 && (React.createElement("span", { className: messageWindow_module_css_1["default"]["online-count"] },
                     onlineCount,
                     " online")),
-                React.createElement("div", { className: chatWindow_module_css_1["default"]["status-indicator"] + " " + (isConnected ? chatWindow_module_css_1["default"].connected : chatWindow_module_css_1["default"].disconnected) }),
-                React.createElement("span", { className: chatWindow_module_css_1["default"]["status-text"] }, isConnected ? 'Online' : 'Offline'))),
-        React.createElement("div", { className: chatWindow_module_css_1["default"].messages },
-            messages.length === 0 ? (React.createElement("div", { className: chatWindow_module_css_1["default"]["no-messages"] }, "Nessun messaggio in questa chat")) : (messages.map(function (message, index) { return (React.createElement("div", { key: index, className: chatWindow_module_css_1["default"].message + " " + (message.senderId === currentUserId ? chatWindow_module_css_1["default"]["message-own"] : chatWindow_module_css_1["default"]["message-other"]) },
-                React.createElement("div", { className: chatWindow_module_css_1["default"]["message-meta"] },
-                    React.createElement("span", { className: chatWindow_module_css_1["default"]["message-time"] }, message.timestamp ? formatTimestamp(message.timestamp) : '')),
-                React.createElement("div", { className: chatWindow_module_css_1["default"]["message-content"] },
-                    message.senderId !== currentUserId && (React.createElement("div", { className: chatWindow_module_css_1["default"]["message-sender"] }, message.senderId)),
+                React.createElement("div", { className: messageWindow_module_css_1["default"]["status-indicator"] + " " + (isConnected ? messageWindow_module_css_1["default"].connected : messageWindow_module_css_1["default"].disconnected) }),
+                React.createElement("span", { className: messageWindow_module_css_1["default"]["status-text"] }, isConnected ? 'Online' : 'Offline'))),
+        React.createElement("div", { className: messageWindow_module_css_1["default"].messages },
+            messages.length === 0 ? (React.createElement("div", { className: messageWindow_module_css_1["default"]["no-messages"] }, "Nessun messaggio in questa chat")) : (messages.map(function (message, index) { return (React.createElement("div", { key: index, className: messageWindow_module_css_1["default"].message + " " + (message.senderId === currentUserId ? messageWindow_module_css_1["default"]["message-own"] : messageWindow_module_css_1["default"]["message-other"]) },
+                React.createElement("div", { className: messageWindow_module_css_1["default"]["message-meta"] },
+                    React.createElement("span", { className: messageWindow_module_css_1["default"]["message-time"] }, message.timestamp ? formatTimestamp(message.timestamp) : '')),
+                React.createElement("div", { className: messageWindow_module_css_1["default"]["message-content"] },
+                    message.senderId !== currentUserId && (React.createElement("div", { className: messageWindow_module_css_1["default"]["message-sender"] }, message.senderId)),
                     renderMessageContent(message)))); })),
             React.createElement("div", { ref: messagesEndRef })),
         renderTypingIndicator(),
         renderFilePreview(),
-        React.createElement("div", { id: chatWindow_module_css_1["default"]["message-input"] },
-            React.createElement("input", { type: "file", ref: fileInputRef, onChange: handleFileSelect, accept: "image/*,video/*", className: chatWindow_module_css_1["default"]["hidden-file-input"], title: "Seleziona un file da allegare" }),
-            React.createElement("button", { onClick: function () { var _a; return (_a = fileInputRef.current) === null || _a === void 0 ? void 0 : _a.click(); }, className: chatWindow_module_css_1["default"]["attach-button"], disabled: !isConnected || isUploading, type: "button", title: "Allega file", "aria-label": "Allega immagine o video" },
+        React.createElement("div", { id: messageInput_module_css_1["default"]["message-input"] },
+            React.createElement("input", { type: "file", ref: fileInputRef, onChange: handleFileSelect, accept: "image/*,video/*", className: messageInput_module_css_1["default"]["hidden-file-input"], title: "Seleziona un file da allegare" }),
+            React.createElement("button", { onClick: function () { var _a; return (_a = fileInputRef.current) === null || _a === void 0 ? void 0 : _a.click(); }, className: messageInput_module_css_1["default"]["attach-button"], disabled: !isConnected || isUploading, type: "button", title: "Allega file", "aria-label": "Allega immagine o video" },
                 React.createElement(io5_1.IoAttach, null)),
-            React.createElement("input", { type: "text", value: newMessage, onChange: handleInputChange, onKeyPress: handleKeyPress, placeholder: selectedFile ? "Aggiungi una caption..." : "Scrivi un messaggio...", className: chatWindow_module_css_1["default"]["message-input-field"], disabled: !isConnected || isUploading }),
-            React.createElement("div", { id: chatWindow_module_css_1["default"]["btnSend"], onClick: sendMessage, className: chatWindow_module_css_1["default"]["send-button"] + " " + (!canSend ? chatWindow_module_css_1["default"].disabled : ''), role: "button", tabIndex: 0, onKeyDown: function (e) {
+            React.createElement("input", { type: "text", value: newMessage, onChange: handleInputChange, onKeyPress: handleKeyPress, placeholder: selectedFile ? "Aggiungi una caption..." : "Scrivi un messaggio...", className: messageInput_module_css_1["default"]["message-input-field"], disabled: !isConnected || isUploading }),
+            React.createElement("div", { id: messageInput_module_css_1["default"]["btnSend"], onClick: sendMessage, className: messageInput_module_css_1["default"]["send-button"] + " " + (!canSend ? messageInput_module_css_1["default"].disabled : ''), role: "button", tabIndex: 0, onKeyDown: function (e) {
                     if ((e.key === 'Enter' || e.key === ' ') && canSend) {
                         e.preventDefault();
                         sendMessage();
                     }
                 }, "aria-label": "Invia messaggio", title: "Invia messaggio" }, isUploading ? '...' : React.createElement(io5_1.IoSendSharp, null))),
-        !isConnected && (React.createElement("div", { className: chatWindow_module_css_1["default"]["connection-error"] }, "Connessione WebSocket non disponibile")),
-        isUploading && (React.createElement("div", { className: chatWindow_module_css_1["default"]["upload-progress"] }, "Caricamento file in corso...")),
-        error && (React.createElement("div", { className: chatWindow_module_css_1["default"]["error-message"] }, error)),
-        modalMedia && (React.createElement("div", { className: chatWindow_module_css_1["default"]["media-modal"], onClick: closeMediaModal },
-            React.createElement("div", { className: chatWindow_module_css_1["default"]["modal-close"] },
+        !isConnected && (React.createElement("div", { className: messageWindow_module_css_1["default"]["connection-error"] }, "Connessione WebSocket non disponibile")),
+        isUploading && (React.createElement("div", { className: messageWindow_module_css_1["default"]["upload-progress"] }, "Caricamento file in corso...")),
+        error && (React.createElement("div", { className: messageWindow_module_css_1["default"]["error-message"] }, error)),
+        modalMedia && (React.createElement("div", { className: mediaModal_module_css_1["default"]["media-modal"], onClick: closeMediaModal },
+            React.createElement("div", { className: mediaModal_module_css_1["default"]["modal-close"] },
                 React.createElement(io5_1.IoClose, null)),
-            React.createElement("div", { className: chatWindow_module_css_1["default"]["modal-content"], onClick: function (e) { return e.stopPropagation(); } }, modalMedia.type === 'image' ? (React.createElement("img", { src: modalMedia.url, alt: "Immagine full screen", className: chatWindow_module_css_1["default"]["modal-image"] })) : (React.createElement("video", { src: modalMedia.url, controls: true, autoPlay: true, className: chatWindow_module_css_1["default"]["modal-video"] }, "Il tuo browser non supporta i video.")))))));
+            React.createElement("div", { className: mediaModal_module_css_1["default"]["modal-content"], onClick: function (e) { return e.stopPropagation(); } }, modalMedia.type === 'image' ? (React.createElement("img", { src: modalMedia.url, alt: "Immagine full screen", className: mediaModal_module_css_1["default"]["modal-image"] })) : (React.createElement("video", { src: modalMedia.url, controls: true, autoPlay: true, className: mediaModal_module_css_1["default"]["modal-video"] }, "Il tuo browser non supporta i video.")))))));
 }
 exports["default"] = MessageWindow;

@@ -3,7 +3,9 @@ import { MessageService } from '@/services/messageService';
 import type { ChatMessage, MessageFilters } from '@/types/api';
 import { IoSendSharp, IoAttach, IoClose } from "react-icons/io5";
 import Image from 'next/image';
-import style from "@/styles/chatWindow.module.css";
+import messageStyle from "@/styles/messageWindow.module.css";
+import inputStyle from "@/styles/messageInput.module.css";
+import modalStyle from "@/styles/mediaModal.module.css";
 
 interface MessageWindowProps {
   chatId: string;
@@ -199,9 +201,9 @@ export default function MessageWindow({ chatId, chatName, currentUserId, chatPar
       : `${names[0]} e altri stanno scrivendo...`;
 
     return (
-      <div className={style["typing-indicator"]}>
+      <div className={messageStyle["typing-indicator"]}>
         <span>{text}</span>
-        <span className={style["typing-dots"]}>
+        <span className={messageStyle["typing-dots"]}>
           <span>.</span><span>.</span><span>.</span>
         </span>
       </div>
@@ -309,31 +311,31 @@ export default function MessageWindow({ chatId, chatName, currentUserId, chatPar
   };
 
   const renderImage = (message: ChatMessage) => (
-    <div className={style["message-media"]}>
+    <div className={messageStyle["message-media"]}>
       <div 
-        className={style["message-image-container"]}
+        className={messageStyle["message-image-container"]}
         onClick={() => openMediaModal(message.fileUrl || '', 'image')}
       >
         <img
           src={message.fileUrl || ""}
           alt={message.fileName || 'Immagine condivisa'}
-          className={style["message-image"]}
+          className={messageStyle["message-image"]}
         />
       </div>
       {message.content && (
-        <div className={style["message-caption"]}>{message.content}</div>
+        <div className={messageStyle["message-caption"]}>{message.content}</div>
       )}
     </div>
   );
 
   const renderVideo = (message: ChatMessage) => (
-    <div className={style["message-media"]}>
+    <div className={messageStyle["message-media"]}>
       <div 
-        className={style["message-video-container"]}
+        className={messageStyle["message-video-container"]}
         onClick={() => openMediaModal(message.fileUrl || '', 'video')}
       >
         <video 
-          className={style["message-video"]}
+          className={messageStyle["message-video"]}
           preload="metadata"
           aria-label={`Video: ${message.fileName || 'Video condiviso'}`}
         >
@@ -341,10 +343,10 @@ export default function MessageWindow({ chatId, chatName, currentUserId, chatPar
           <source src={message.fileUrl} type="video/webm" />
           <source src={message.fileUrl} type="video/quicktime" />
         </video>
-        <div className={style["video-play-overlay"]}>▶</div>
+        <div className={messageStyle["video-play-overlay"]}>▶</div>
       </div>
       {message.content && (
-        <div className={style["message-caption"]}>{message.content}</div>
+        <div className={messageStyle["message-caption"]}>{message.content}</div>
       )}
     </div>
   );
@@ -356,7 +358,7 @@ export default function MessageWindow({ chatId, chatName, currentUserId, chatPar
       case 'VIDEO':
         return renderVideo(message);
       default:
-        return <div className={style["message-text"]}>{message.content}</div>;
+        return <div className={messageStyle["message-text"]}>{message.content}</div>;
     }
   };
 
@@ -364,36 +366,36 @@ export default function MessageWindow({ chatId, chatName, currentUserId, chatPar
     if (!selectedFile || !filePreviewUrl) return null;
 
     return (
-      <div className={style["file-preview"]}>
-        <div className={style["preview-content"]}>
-          <div className={style["preview-media"]}>
+      <div className={inputStyle["file-preview"]}>
+        <div className={inputStyle["preview-content"]}>
+          <div className={inputStyle["preview-media"]}>
             {selectedFile.type.startsWith('image/') ? (
-              <div className={style["preview-image-container"]}>
+              <div className={inputStyle["preview-image-container"]}>
                 <Image 
                   src={filePreviewUrl} 
                   alt="Anteprima immagine selezionata" 
                   width={80}
                   height={80}
-                  className={style["preview-image"]}
+                  className={inputStyle["preview-image"]}
                   style={{ objectFit: 'cover' }}
                 />
               </div>
             ) : (
               <video 
                 src={filePreviewUrl} 
-                className={style["preview-video"]}
+                className={inputStyle["preview-video"]}
                 muted
                 aria-label="Anteprima video selezionato"
               />
             )}
           </div>
-          <div className={style["preview-info"]}>
-            <div className={style["preview-filename"]}>{selectedFile.name}</div>
-            <div className={style["preview-filesize"]}>{formatFileSize(selectedFile.size)}</div>
+          <div className={inputStyle["preview-info"]}>
+            <div className={inputStyle["preview-filename"]}>{selectedFile.name}</div>
+            <div className={inputStyle["preview-filesize"]}>{formatFileSize(selectedFile.size)}</div>
           </div>
           <button 
             onClick={removeSelectedFile}
-            className={style["preview-remove"]}
+            className={inputStyle["preview-remove"]}
             type="button"
             title="Rimuovi file selezionato"
             aria-label="Rimuovi file selezionato"
@@ -406,50 +408,50 @@ export default function MessageWindow({ chatId, chatName, currentUserId, chatPar
   };
 
   if (!chatId) {
-    return <div className={style["message-window"]}>Seleziona una chat per iniziare</div>;
+    return <div className={messageStyle["message-window"]}>Seleziona una chat per iniziare</div>;
   }
 
   if (loading) {
-    return <div className={style["message-window"]}></div>;
+    return <div className={messageStyle["message-window"]}></div>;
   }
 
   if (error && !messages.length) {
-    return <div className={`${style["message-window"]} ${style.error}`}>{error}</div>;
+    return <div className={`${messageStyle["message-window"]} ${messageStyle.error}`}>{error}</div>;
   }
 
   const canSend = (newMessage.trim() || selectedFile) && isConnected && !isUploading;
 
   return (
-    <div className={style["message-window"]}>
-      <div className={style.messageHeader}>
+    <div className={messageStyle["message-window"]}>
+      <div className={messageStyle.messageHeader}>
         <span>{chatName}</span>
-        <div className={style["connection-status"]}>
+        <div className={messageStyle["connection-status"]}>
           {chatParticipants.length > 2 && onlineCount > 0 && (
-            <span className={style["online-count"]}>{onlineCount} online</span>
+            <span className={messageStyle["online-count"]}>{onlineCount} online</span>
           )}
-          <div className={`${style["status-indicator"]} ${isConnected ? style.connected : style.disconnected}`} />
-          <span className={style["status-text"]}>{isConnected ? 'Online' : 'Offline'}</span>
+          <div className={`${messageStyle["status-indicator"]} ${isConnected ? messageStyle.connected : messageStyle.disconnected}`} />
+          <span className={messageStyle["status-text"]}>{isConnected ? 'Online' : 'Offline'}</span>
         </div>
       </div>
 
-      <div className={style.messages}>
+      <div className={messageStyle.messages}>
         {messages.length === 0 ? (
-          <div className={style["no-messages"]}>Nessun messaggio in questa chat</div>
+          <div className={messageStyle["no-messages"]}>Nessun messaggio in questa chat</div>
         ) : (
           messages.map((message, index) => (
             <div
               key={index}
-              className={`${style.message} ${message.senderId === currentUserId ? style["message-own"] : style["message-other"]}`}
+              className={`${messageStyle.message} ${message.senderId === currentUserId ? messageStyle["message-own"] : messageStyle["message-other"]}`}
             >
-              <div className={style["message-meta"]}>
-                <span className={style["message-time"]}>
+              <div className={messageStyle["message-meta"]}>
+                <span className={messageStyle["message-time"]}>
                   {message.timestamp ? formatTimestamp(message.timestamp) : ''}
                 </span>
               </div>
 
-              <div className={style["message-content"]}>
+              <div className={messageStyle["message-content"]}>
                 {message.senderId !== currentUserId && (
-                  <div className={style["message-sender"]}>{message.senderId}</div>
+                  <div className={messageStyle["message-sender"]}>{message.senderId}</div>
                 )}
                 {renderMessageContent(message)}
               </div>
@@ -462,19 +464,19 @@ export default function MessageWindow({ chatId, chatName, currentUserId, chatPar
       {renderTypingIndicator()}
       {renderFilePreview()}
 
-      <div id={style["message-input"]}>
+      <div id={inputStyle["message-input"]}>
         <input
           type="file"
           ref={fileInputRef}
           onChange={handleFileSelect}
           accept="image/*,video/*"
-          className={style["hidden-file-input"]}
+          className={inputStyle["hidden-file-input"]}
           title="Seleziona un file da allegare"
         />
         
         <button
           onClick={() => fileInputRef.current?.click()}
-          className={style["attach-button"]}
+          className={inputStyle["attach-button"]}
           disabled={!isConnected || isUploading}
           type="button"
           title="Allega file"
@@ -489,14 +491,14 @@ export default function MessageWindow({ chatId, chatName, currentUserId, chatPar
           onChange={handleInputChange}
           onKeyPress={handleKeyPress}
           placeholder={selectedFile ? "Aggiungi una caption..." : "Scrivi un messaggio..."}
-          className={style["message-input-field"]}
+          className={inputStyle["message-input-field"]}
           disabled={!isConnected || isUploading}
         />
         
         <div
-          id={style["btnSend"]}
+          id={inputStyle["btnSend"]}
           onClick={sendMessage}
-          className={`${style["send-button"]} ${!canSend ? style.disabled : ''}`}
+          className={`${inputStyle["send-button"]} ${!canSend ? inputStyle.disabled : ''}`}
           role="button"
           tabIndex={0}
           onKeyDown={(e) => {
@@ -513,42 +515,42 @@ export default function MessageWindow({ chatId, chatName, currentUserId, chatPar
       </div>
 
       {!isConnected && (
-        <div className={style["connection-error"]}>
+        <div className={messageStyle["connection-error"]}>
           Connessione WebSocket non disponibile
         </div>
       )}
 
       {isUploading && (
-        <div className={style["upload-progress"]}>
+        <div className={messageStyle["upload-progress"]}>
           Caricamento file in corso...
         </div>
       )}
 
       {error && (
-        <div className={style["error-message"]}>
+        <div className={messageStyle["error-message"]}>
           {error}
         </div>
       )}
 
       {/* MODAL PER VISUALIZZARE MEDIA A TUTTO SCHERMO */}
       {modalMedia && (
-        <div className={style["media-modal"]} onClick={closeMediaModal}>
-          <div className={style["modal-close"]}>
+        <div className={modalStyle["media-modal"]} onClick={closeMediaModal}>
+          <div className={modalStyle["modal-close"]}>
             <IoClose />
           </div>
-          <div className={style["modal-content"]} onClick={(e) => e.stopPropagation()}>
+          <div className={modalStyle["modal-content"]} onClick={(e) => e.stopPropagation()}>
             {modalMedia.type === 'image' ? (
               <img 
                 src={modalMedia.url} 
                 alt="Immagine full screen" 
-                className={style["modal-image"]}
+                className={modalStyle["modal-image"]}
               />
             ) : (
               <video 
                 src={modalMedia.url} 
                 controls 
                 autoPlay
-                className={style["modal-video"]}
+                className={modalStyle["modal-video"]}
               >
                 Il tuo browser non supporta i video.
               </video>

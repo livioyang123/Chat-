@@ -48,7 +48,7 @@ var services_1 = require("@/services");
 var react_1 = require("react");
 var ModalCreateGroup_1 = require("./ModalCreateGroup");
 var ModalAddFriend_1 = require("./ModalAddFriend");
-var chatWindow_module_css_1 = require("@/styles/chatWindow.module.css");
+var chatList_module_css_1 = require("@/styles/chatList.module.css");
 var ChatHeader_1 = require("@/components/chat/ChatHeader");
 function ChatList(_a) {
     var _this = this;
@@ -87,16 +87,15 @@ function ChatList(_a) {
         }); };
         fetchChats();
     }, []);
-    return (React.createElement("div", { className: chatWindow_module_css_1["default"]["chat-list"] },
+    return (React.createElement("div", { className: chatList_module_css_1["default"]["chat-list"] },
         openGroupModal && (React.createElement(ModalCreateGroup_1["default"], { onBtnClick: handleOpenGroupModal, addChats: addChat })),
         openFriendModal && (React.createElement(ModalAddFriend_1["default"], { onAddFriendClick: handleOpenFriendModal })),
         React.createElement(ChatHeader_1["default"], { onBtnClick: handleOpenGroupModal, onAddFriendClick: handleOpenFriendModal }),
-        React.createElement("div", { className: chatWindow_module_css_1["default"]["chat-item-container"] }, chats && chats.map(function (chat) { return (React.createElement("div", { key: chat.id, className: chatWindow_module_css_1["default"]["chat-item"], onClick: function () { return onButtonClick(chat.id, chat.name, chat.participantIds); } },
-            React.createElement("div", { className: chatWindow_module_css_1["default"]["avatar-container"] }),
-            React.createElement("div", { className: chatWindow_module_css_1["default"]["chat-info"] },
-                React.createElement("h1", { className: chatWindow_module_css_1["default"]["chat-name"] },
+        React.createElement("div", { className: chatList_module_css_1["default"]["chat-item-container"] }, chats && chats.map(function (chat) { return (React.createElement("div", { key: chat.id, className: chatList_module_css_1["default"]["chat-item"], onClick: function () { return onButtonClick(chat.id, chat.name, chat.participantIds); } },
+            React.createElement("div", { className: chatList_module_css_1["default"]["chat-info"] },
+                React.createElement("h1", { className: chatList_module_css_1["default"]["chat-name"] },
                     chat.name,
                     React.createElement("br", null),
-                    React.createElement("span", { className: chatWindow_module_css_1["default"]["chat-description"] }, "Descripsion: " + chat.description))))); }))));
+                    React.createElement("span", { className: chatList_module_css_1["default"]["chat-description"] }, "Descripsion: " + chat.description))))); }))));
 }
 exports["default"] = ChatList;

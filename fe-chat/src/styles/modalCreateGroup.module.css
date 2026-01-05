@@ -1,0 +1,220 @@
+/* ========================================
+   MODAL CREATE GROUP
+   ======================================== */
+
+.create-group-container {
+  display: flex;
+  transform: translateY(-10px);
+  position: relative;
+  height: 95vh;
+  width: 100%;
+  min-width: max-content;
+  z-index: 3;
+  background-color: rgb(255, 255, 255);
+  margin-bottom: 5vh;
+  animation: slideInFromLeft 0.5s ease-out forwards;
+}
+
+@keyframes slideInFromLeft {
+  from {
+    transform: translate3d(-30px, -10px, 0px);
+  }
+  to {
+    transform: translate3d(0, -10px, 0);
+  }
+}
+
+.icon {
+  position: absolute;
+  top: 5px;
+  left: 10px;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.icon:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.title {
+  position: absolute;
+  top: 5px;
+  left: 40px;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+/* Group Info Section */
+.group-info {
+  text-align: left;
+  position: absolute;
+  top: 40px;
+  width: 100%;
+  height: max-content;
+  padding: 0 10px;
+}
+
+.group-info input {
+  border: none;
+  border-bottom: 1px solid #ddd;
+  padding: 8px;
+  font-size: 14px;
+}
+
+.group-info input:focus {
+  outline: none;
+  border-bottom-color: #d3be88e3;
+}
+
+.info-name,
+.info-desc {
+  margin-bottom: 10px;
+}
+
+/* Search Input */
+.search-input {
+  width: calc(100% - 20px);
+  position: absolute;
+  top: 140px;
+  left: 10px;
+}
+
+.search-input input {
+  width: fit-content;
+  height: 40px;
+  border: none;
+  border-bottom: 1px solid #ddd;
+  padding: 8px;
+  font-size: 14px;
+}
+
+.search-input input:focus {
+  outline: none;
+  border-bottom-color: #d3be88e3;
+}
+
+/* Selected Count */
+.selected-count {
+  position: absolute;
+  top: 120px;
+  left: 10px;
+  text-align: left;
+  margin: 5px;
+  font-size: 13px;
+  color: #666;
+  font-weight: 500;
+}
+
+/* Member List */
+.member-list {
+  display: flex;
+  text-align: left;
+  position: absolute;
+  top: 230px;
+  left: 10px;
+  right: 10px;
+  background-color: white;
+  border: 1px solid #ccc;
+  height: calc(95vh - 250px);
+  flex-direction: column;
+  gap: 5px;
+  overflow-y: auto;
+  padding: 10px;
+}
+
+.member-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.member-list::-webkit-scrollbar-thumb {
+  background-color: #ccc;
+  border-radius: 3px;
+}
+
+.member-item {
+  padding: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.box {
+  display: flex;
+  position: relative;
+  align-items: center;
+  padding: 8px;
+}
+
+.box:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  border-radius: 8px;
+}
+
+.box label {
+  margin-right: auto;
+  margin-left: 8px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.box input[type="checkbox"] {
+  cursor: pointer;
+  width: 18px;
+  height: 18px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* No Results */
+.no-results {
+  text-align: center;
+  color: #666;
+  font-size: 14px;
+  padding: 20px;
+  font-style: italic;
+}
+
+/* Action Buttons */
+.action-buttons {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+}
+
+.create-btn {
+  font-size: 32px;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  color: #28a745;
+}
+
+.create-btn:hover {
+  background-color: rgba(40, 167, 69, 0.1);
+  transform: scale(1.05);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .create-group-container {
+    min-width: 100%;
+  }
+  
+  .member-list {
+    height: calc(95vh - 230px);
+  }
+}

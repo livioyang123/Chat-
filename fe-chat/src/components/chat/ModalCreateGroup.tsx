@@ -4,8 +4,7 @@ import { useEffect, useState } from "react";
 import { ChatRoom, User } from "@/types/api";
 import { ChatService } from "@/services";
 import { MdOutlineDone } from "react-icons/md";
-import style from "@/styles/chatWindow.module.css";
-
+import style from "@/styles/modalCreateGroup.module.css";
 interface FuncProps {
   onBtnClick: (condition: boolean) => void,
   addChats: (chat: ChatRoom) => void;

@@ -2,7 +2,7 @@ import { GiCrossMark } from "react-icons/gi";
 import { UserService } from "@/services";
 import { useEffect, useState, useCallback } from "react";
 import {  User } from "@/types/api";
-import style from "@/styles/chatWindow.module.css";
+import style from "@/styles/modalAddFriend.module.css";
 
 interface FuncProps {
   onAddFriendClick: (condition: boolean) => void;

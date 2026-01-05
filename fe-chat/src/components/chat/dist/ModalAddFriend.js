@@ -39,7 +39,7 @@ exports.__esModule = true;
 var gi_1 = require("react-icons/gi");
 var services_1 = require("@/services");
 var react_1 = require("react");
-var chatWindow_module_css_1 = require("@/styles/chatWindow.module.css");
+var modalAddFriend_module_css_1 = require("@/styles/modalAddFriend.module.css");
 function ModalAddFriend(_a) {
     var _this = this;
     var onAddFriendClick = _a.onAddFriendClick;
@@ -130,16 +130,16 @@ function ModalAddFriend(_a) {
     var isAlreadyFriend = function (userId) {
         return friends.some(function (friend) { return friend.id === userId; });
     };
-    return (React.createElement("div", { className: chatWindow_module_css_1["default"]["create-group-container"] },
-        React.createElement("div", { className: chatWindow_module_css_1["default"].icon, onClick: function () { return onAddFriendClick(false); } },
+    return (React.createElement("div", { className: modalAddFriend_module_css_1["default"]["create-group-container"] },
+        React.createElement("div", { className: modalAddFriend_module_css_1["default"].icon, onClick: function () { return onAddFriendClick(false); } },
             React.createElement(gi_1.GiCrossMark, null)),
-        React.createElement("div", { className: chatWindow_module_css_1["default"].title }, "Aggiungi Amico"),
-        React.createElement("div", { className: chatWindow_module_css_1["default"]["search-input"] },
+        React.createElement("div", { className: modalAddFriend_module_css_1["default"].title }, "Aggiungi Amico"),
+        React.createElement("div", { className: modalAddFriend_module_css_1["default"]["search-input"] },
             React.createElement("input", { type: "text", placeholder: "Cerca utenti per username...", value: searchTerm, onChange: function (e) { return setSearchTerm(e.target.value); } })),
-        React.createElement("div", { className: chatWindow_module_css_1["default"]["member-list"] }, loading ? (React.createElement("div", { className: chatWindow_module_css_1["default"]["no-results"] }, "Ricerca in corso...")) : searchResults.length > 0 ? (searchResults.map(function (user) { return (React.createElement("div", { className: chatWindow_module_css_1["default"]["member-item"], key: user.id },
-            React.createElement("div", { className: chatWindow_module_css_1["default"]["user-info"] },
-                React.createElement("div", { className: chatWindow_module_css_1["default"].username }, user.username),
-                React.createElement("div", { className: chatWindow_module_css_1["default"]["user-actions"] }, isAlreadyFriend(user.id) ? (React.createElement("button", { className: chatWindow_module_css_1["default"]["already-friend-btn"], disabled: true }, "Gi\u00E0 amico"))
-                    : (React.createElement("button", { onClick: function () { return handleSendFriendRequest(user.id); }, className: chatWindow_module_css_1["default"]["add-friend-btn"] }, "Aggiungi")))))); })) : searchTerm ? (React.createElement("div", { className: chatWindow_module_css_1["default"]["no-results"] }, "Nessun utente trovato per la ricerca")) : (React.createElement("div", { className: chatWindow_module_css_1["default"]["no-results"] }, "Inserisci un username per cercare nuovi amici")))));
+        React.createElement("div", { className: modalAddFriend_module_css_1["default"]["member-list"] }, loading ? (React.createElement("div", { className: modalAddFriend_module_css_1["default"]["no-results"] }, "Ricerca in corso...")) : searchResults.length > 0 ? (searchResults.map(function (user) { return (React.createElement("div", { className: modalAddFriend_module_css_1["default"]["member-item"], key: user.id },
+            React.createElement("div", { className: modalAddFriend_module_css_1["default"]["user-info"] },
+                React.createElement("div", { className: modalAddFriend_module_css_1["default"].username }, user.username),
+                React.createElement("div", { className: modalAddFriend_module_css_1["default"]["user-actions"] }, isAlreadyFriend(user.id) ? (React.createElement("button", { className: modalAddFriend_module_css_1["default"]["already-friend-btn"], disabled: true }, "Gi\u00E0 amico"))
+                    : (React.createElement("button", { onClick: function () { return handleSendFriendRequest(user.id); }, className: modalAddFriend_module_css_1["default"]["add-friend-btn"] }, "Aggiungi")))))); })) : searchTerm ? (React.createElement("div", { className: modalAddFriend_module_css_1["default"]["no-results"] }, "Nessun utente trovato per la ricerca")) : (React.createElement("div", { className: modalAddFriend_module_css_1["default"]["no-results"] }, "Inserisci un username per cercare nuovi amici")))));
 }
 exports["default"] = ModalAddFriend;
