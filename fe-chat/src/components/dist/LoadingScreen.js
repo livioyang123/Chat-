@@ -1,3 +1,4 @@
+// MODIFICA COMPLETA: fe-chat/src/components/LoadingScreen.tsx
 'use client';
 "use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
@@ -38,6 +39,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 exports.__esModule = true;
 var react_1 = require("react");
+var gsap_1 = require("gsap");
 var loading_module_css_1 = require("@/styles/loading.module.css");
 var services_1 = require("@/services");
 var messageService_1 = require("@/services/messageService");
@@ -46,6 +48,89 @@ function LoadingScreen(_a) {
     var onComplete = _a.onComplete;
     var _b = react_1.useState(0), progress = _b[0], setProgress = _b[1];
     var isLoadingRef = react_1.useRef(false);
+    var gridRef = react_1.useRef(null);
+    var sparkContainerRef = react_1.useRef(null);
+    // ✨ Animazione Grid Scan
+    react_1.useEffect(function () {
+        if (!gridRef.current)
+            return;
+        var grid = gridRef.current;
+        var cells = grid.querySelectorAll("." + loading_module_css_1["default"].gridCell);
+        // Animazione scan continua
+        gsap_1.gsap.to(cells, {
+            opacity: 0.8,
+            scale: 1.05,
+            stagger: {
+                amount: 2,
+                from: 'random',
+                repeat: -1,
+                yoyo: true
+            },
+            duration: 0.5,
+            ease: 'power2.inOut'
+        });
+        // Scan line orizzontale
+        var scanLine = grid.querySelector("." + loading_module_css_1["default"].scanLine);
+        if (scanLine) {
+            gsap_1.gsap.to(scanLine, {
+                y: '100vh',
+                duration: 2,
+                repeat: -1,
+                ease: 'none'
+            });
+        }
+    }, []);
+    // ✨ Click Spark Effect
+    react_1.useEffect(function () {
+        var handleClick = function (e) {
+            if (!sparkContainerRef.current)
+                return;
+            var spark = document.createElement('div');
+            spark.className = loading_module_css_1["default"].clickSpark;
+            spark.style.left = e.clientX + "px";
+            spark.style.top = e.clientY + "px";
+            sparkContainerRef.current.appendChild(spark);
+            // Animazione con GSAP
+            gsap_1.gsap.to(spark, {
+                scale: 2,
+                opacity: 0,
+                duration: 0.6,
+                ease: 'power2.out',
+                onComplete: function () {
+                    spark.remove();
+                }
+            });
+            var _loop_1 = function (i) {
+                var particle = document.createElement('div');
+                particle.className = loading_module_css_1["default"].sparkParticle;
+                particle.style.left = e.clientX + "px";
+                particle.style.top = e.clientY + "px";
+                sparkContainerRef.current.appendChild(particle);
+                var angle = (Math.PI * 2 * i) / 6;
+                var distance = 50 + Math.random() * 30;
+                var x = Math.cos(angle) * distance;
+                var y = Math.sin(angle) * distance;
+                gsap_1.gsap.to(particle, {
+                    x: x,
+                    y: y,
+                    opacity: 0,
+                    scale: 0,
+                    duration: 0.8,
+                    ease: 'power2.out',
+                    onComplete: function () {
+                        particle.remove();
+                    }
+                });
+            };
+            // Spark particles
+            for (var i = 0; i < 6; i++) {
+                _loop_1(i);
+            }
+        };
+        document.addEventListener('click', handleClick);
+        return function () { return document.removeEventListener('click', handleClick); };
+    }, []);
+    // Preload data (mantieni logica originale)
     react_1.useEffect(function () {
         if (isLoadingRef.current)
             return;
@@ -56,7 +141,6 @@ function LoadingScreen(_a) {
                 switch (_a.label) {
                     case 0:
                         _a.trys.push([0, 6, , 7]);
-                        // Step 1: WebSocket (immediato)
                         setProgress(10);
                         return [4 /*yield*/, messageService_1.MessageService.initializeWebSocket()];
                     case 1:
@@ -75,15 +159,12 @@ function LoadingScreen(_a) {
                         return [3 /*break*/, 5];
                     case 5:
                         setProgress(90);
-                        // Step 3: Finalizza
                         setProgress(100);
-                        // Completa SUBITO quando arriva a 100%
                         setTimeout(function () { return onComplete(); }, 100);
                         return [3 /*break*/, 7];
                     case 6:
                         error_1 = _a.sent();
                         console.error('Critical error during preload:', error_1);
-                        // Anche in caso di errore critico, completa
                         setProgress(100);
                         setTimeout(function () { return onComplete(); }, 200);
                         return [3 /*break*/, 7];
@@ -97,14 +178,16 @@ function LoadingScreen(_a) {
         };
     }, [onComplete]);
     return (React.createElement("div", { className: loading_module_css_1["default"].loadingContainer },
-        React.createElement("div", { className: loading_module_css_1["default"].animationArea },
-            React.createElement("div", { className: loading_module_css_1["default"].sheepWalkContainer },
-                React.createElement("div", { className: loading_module_css_1["default"].walkingSheep }, "\uD83D\uDC11"),
-                React.createElement("div", { className: loading_module_css_1["default"].ground }))),
-        React.createElement("div", { className: loading_module_css_1["default"].progressBar },
-            React.createElement("div", { className: loading_module_css_1["default"].progressFill, style: { width: progress + "%" } })),
-        React.createElement("div", { className: loading_module_css_1["default"].progressText },
-            progress,
-            "%")));
+        React.createElement("div", { ref: gridRef, className: loading_module_css_1["default"].gridBackground },
+            Array.from({ length: 100 }).map(function (_, i) { return (React.createElement("div", { key: i, className: loading_module_css_1["default"].gridCell })); }),
+            React.createElement("div", { className: loading_module_css_1["default"].scanLine })),
+        React.createElement("div", { ref: sparkContainerRef, className: loading_module_css_1["default"].sparkContainer }),
+        React.createElement("div", { className: loading_module_css_1["default"].content },
+            React.createElement("h1", { className: loading_module_css_1["default"].title }, "Loading"),
+            React.createElement("div", { className: loading_module_css_1["default"].progressBar },
+                React.createElement("div", { className: loading_module_css_1["default"].progressFill, style: { width: progress + "%" } })),
+            React.createElement("div", { className: loading_module_css_1["default"].progressText },
+                progress,
+                "%"))));
 }
 exports["default"] = LoadingScreen;

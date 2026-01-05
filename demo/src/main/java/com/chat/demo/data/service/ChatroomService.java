@@ -54,4 +54,15 @@ public class ChatroomService {
         }
         return Optional.empty();
     }
+    public Optional<Chatroom> removeParticipantFromRoom(String roomId, String userId) {
+        Optional<Chatroom> chatroomOpt = chatroomRepository.findById(roomId);
+        if (chatroomOpt.isPresent()) {
+            Chatroom chatroom = chatroomOpt.get();
+            if (chatroom.getParticipantIds().contains(userId)) {
+                chatroom.getParticipantIds().remove(userId);
+                return Optional.of(chatroomRepository.save(chatroom));
+            }
+        }
+        return Optional.empty();
+    }
 }

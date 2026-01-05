@@ -146,6 +146,8 @@
   position: relative;
   align-items: center;
   padding: 8px;
+  gap: 8px; /* ✨ Aggiungi spazio tra checkbox e label */
+  cursor: pointer;
 }
 
 .box:hover {
@@ -154,28 +156,18 @@
 }
 
 .box label {
-  margin-right: auto;
-  margin-left: 8px;
+  /* ✨ RIMUOVI margin-right: auto che nascondeva il testo */
   cursor: pointer;
   font-size: 14px;
+  flex: 1; /* ✨ Occupa lo spazio rimanente */
+  text-align: left;
 }
 
 .box input[type="checkbox"] {
   cursor: pointer;
   width: 18px;
   height: 18px;
-}
-
-.visually-hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border-width: 0;
+  flex-shrink: 0; /* ✨ Non ridurre dimensione checkbox */
 }
 
 /* No Results */

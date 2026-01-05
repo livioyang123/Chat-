@@ -58,6 +58,13 @@ public class ChatroomController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @PutMapping("/{id}/remove-participant/{userId}")
+    public ResponseEntity<Chatroom> removeParticipantFromChatRoom(@PathVariable String id, @PathVariable String userId) {
+        return chatroomService.removeParticipantFromRoom(id, userId)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
     
 
     

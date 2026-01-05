@@ -75,13 +75,11 @@ public class UserController {
     @PostMapping("/{id}/friends/{friendId}")
     public ResponseEntity<?> addFriend(@PathVariable String id, @PathVariable String friendId) {
         try {
-            // Validazione base
             if (id.equals(friendId)) {
                 return ResponseEntity.badRequest()
                         .body(new ErrorResponse("You cannot add yourself as a friend"));
             }
 
-            // Verifica che entrambi gli utenti esistano
             Optional<User> userOpt = userService.getUserById(id);
             Optional<User> friendOpt = userService.getUserById(friendId);
             
@@ -98,13 +96,11 @@ public class UserController {
             User user = userOpt.get();
             User friend = friendOpt.get();
 
-            // Verifica se sono già amici
             if (userService.areFriends(id, friendId)) {
                 return ResponseEntity.badRequest()
                         .body(new ErrorResponse("Users are already friends"));
             }
 
-            // Aggiungi l'amicizia
             boolean success = userService.addFriend(user, friend);
             
             if (!success) {
@@ -112,19 +108,22 @@ public class UserController {
                         .body(new ErrorResponse("Failed to add friend"));
             }
 
-            // Crea la chat room
+            // ✨ CORREZIONE: Crea e ritorna la chatroom
             try {
                 Chatroom chatRoom = new Chatroom();
-                chatRoom.setName("Chat between " + user.getUsername() + " and " + friend.getUsername());
-                chatRoom.setDescription("Private chat room for " + user.getUsername() + " and " + friend.getUsername());
+                chatRoom.setName(user.getUsername() + " & " + friend.getUsername());
+                chatRoom.setDescription("Private chat");
                 chatRoom.setParticipantIds(Set.of(user.getId(), friend.getId()));
-                chatRoomService.createRoom(chatRoom);
+                Chatroom savedChatRoom = chatRoomService.createRoom(chatRoom);
+                
+                // Ritorna la chatroom creata invece di un semplice messaggio
+                return ResponseEntity.ok(savedChatRoom);
+                
             } catch (Exception e) {
-                // Log l'errore ma non fallire l'operazione di amicizia
                 System.err.println("Failed to create chat room: " + e.getMessage());
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(new ErrorResponse("Friend added but failed to create chat"));
             }
-
-            return ResponseEntity.ok(new MessageDto("Friend added successfully"));
             
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

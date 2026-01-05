@@ -153,7 +153,7 @@ var ChatService = /** @class */ (function () {
         return __awaiter(this, void 0, Promise, function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, api_1.ApiService.post("/chats/" + chatId + "/leave")];
+                    case 0: return [4 /*yield*/, api_1.ApiService.post("/chats/" + chatId + "/remove-participant/" + authService_1.AuthService.getCurrentUserId())];
                     case 1:
                         _a.sent();
                         return [2 /*return*/];

@@ -7,6 +7,11 @@ import ModalAddFriend from './ModalAddFriend';
 import style from "@/styles/chatList.module.css";
 import ChatHeader from '@/components/chat/ChatHeader';
 
+import { useContextMenu } from '@/hooks/useContextMenu';
+import ContextMenu from '@/components/ContextMenu';
+import { IoExit, IoPeople, IoTrash } from 'react-icons/io5';
+//import { AuthService } from '@/services';
+
 interface ChatListProps {
   onButtonClick: (chatId: string, chatName: string, participantIds:string[]) => void;
 }
@@ -15,6 +20,62 @@ export default function ChatList({ onButtonClick }: ChatListProps) {
   const [chats, setChats] = useState<ChatRoom[]>([]);
   const [openGroupModal, setOpenGroupModal] = useState(false);
   const [openFriendModal, setOpenFriendModal] = useState(false);
+
+  const contextMenu = useContextMenu();
+
+  const handleChatContextMenu = (e: React.MouseEvent, chat: ChatRoom) => {
+    e.stopPropagation(); // Evita che apra la chat
+
+    //const currentUserId = AuthService.getCurrentUserId();
+    const isGroup = chat.participantIds.length > 2;
+
+    const options = [];
+
+    if (isGroup) {
+      options.push({
+        label: 'Gestisci membri',
+        icon: <IoPeople />,
+        onClick: () => {
+          console.log('Apri modal gestione membri per:', chat.id);
+          // TODO: Implementa modal gestione membri
+        }
+      });
+
+      options.push({
+        label: 'Abbandona gruppo',
+        icon: <IoExit />,
+        danger: true,
+        onClick: async () => {
+          if (confirm(`Vuoi abbandonare ${chat.name}?`)) {
+            try {
+              await ChatService.leaveChat(chat.id);
+              setChats(prev => prev.filter(c => c.id !== chat.id));
+            } catch (error) {
+              console.error('Errore abbandono chat:', error);
+            }
+          }
+        }
+      });
+    } else {
+      options.push({
+        label: 'Elimina chat',
+        icon: <IoTrash />,
+        danger: true,
+        onClick: async () => {
+          if (confirm(`Vuoi eliminare la chat con ${chat.name}?`)) {
+            try {
+              await ChatService.deleteChat(chat.id);
+              setChats(prev => prev.filter(c => c.id !== chat.id));
+            } catch (error) {
+              console.error('Errore eliminazione chat:', error);
+            }
+          }
+        }
+      });
+    }
+
+    contextMenu.openMenu(e, options);
+  };
 
   const handleOpenGroupModal = (condizion: boolean) => {
     setOpenGroupModal(condizion);
@@ -47,7 +108,7 @@ export default function ChatList({ onButtonClick }: ChatListProps) {
         <ModalCreateGroup onBtnClick={handleOpenGroupModal} addChats={addChat} />
       )}
       {openFriendModal && (
-        <ModalAddFriend onAddFriendClick={handleOpenFriendModal} />
+        <ModalAddFriend onAddFriendClick={handleOpenFriendModal} onChatCreated={addChat}/>
       )}
       <ChatHeader
         onBtnClick={handleOpenGroupModal}
@@ -59,6 +120,7 @@ export default function ChatList({ onButtonClick }: ChatListProps) {
             key={chat.id}
             className={style["chat-item"]}
             onClick={() => onButtonClick(chat.id, chat.name, chat.participantIds)}
+            onContextMenu={(e) => handleChatContextMenu(e, chat)}
           >
             
             <div className={style["chat-info"]}>
@@ -73,6 +135,12 @@ export default function ChatList({ onButtonClick }: ChatListProps) {
           </div>
         ))}
       </div>
+      <ContextMenu
+        isOpen={contextMenu.isOpen}
+        position={contextMenu.position}
+        options={contextMenu.options}
+        onClose={contextMenu.closeMenu}
+      />
     </div>
   );
 }

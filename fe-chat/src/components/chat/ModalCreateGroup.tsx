@@ -102,9 +102,6 @@ export default function ModalCreateGroup({ onBtnClick,addChats }: FuncProps) {
           filteredFriends.map((friend) => (
             <div className={style["member-item"]} key={friend.id}>
               <div className={style.box} onClick={() => toggleFriendSelection(friend.id)}>
-                <label htmlFor={`select-friend-${friend.id}`} className={style["visually-hidden"]}>
-                  {friend.username}
-                </label>
                 <input
                   id={`select-friend-${friend.id}`}
                   type="checkbox"
@@ -112,6 +109,10 @@ export default function ModalCreateGroup({ onBtnClick,addChats }: FuncProps) {
                   readOnly
                   title={`Seleziona ${friend.username}`}
                 />
+                {/* ✨ CORREZIONE: Aggiungi label visibile con il nome */}
+                <label htmlFor={`select-friend-${friend.id}`}>
+                  {friend.username}
+                </label>
               </div>
             </div>
           ))

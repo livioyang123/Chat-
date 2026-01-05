@@ -132,8 +132,8 @@ function ModalCreateGroup(_a) {
             " membri selezionati")),
         React.createElement("div", { className: modalCreateGroup_module_css_1["default"]["member-list"] }, loading ? (React.createElement("div", { className: modalCreateGroup_module_css_1["default"]["no-results"] }, "Caricamento amici...")) : filteredFriends.length > 0 ? (filteredFriends.map(function (friend) { return (React.createElement("div", { className: modalCreateGroup_module_css_1["default"]["member-item"], key: friend.id },
             React.createElement("div", { className: modalCreateGroup_module_css_1["default"].box, onClick: function () { return toggleFriendSelection(friend.id); } },
-                React.createElement("label", { htmlFor: "select-friend-" + friend.id, className: modalCreateGroup_module_css_1["default"]["visually-hidden"] }, friend.username),
-                React.createElement("input", { id: "select-friend-" + friend.id, type: "checkbox", checked: selectedFriends.includes(friend.id), readOnly: true, title: "Seleziona " + friend.username })))); })) : (React.createElement("div", { className: modalCreateGroup_module_css_1["default"]["no-results"] }, searchTerm ? "Nessun amico trovato per la ricerca" : "Nessun amico disponibile"))),
+                React.createElement("input", { id: "select-friend-" + friend.id, type: "checkbox", checked: selectedFriends.includes(friend.id), readOnly: true, title: "Seleziona " + friend.username }),
+                React.createElement("label", { htmlFor: "select-friend-" + friend.id }, friend.username)))); })) : (React.createElement("div", { className: modalCreateGroup_module_css_1["default"]["no-results"] }, searchTerm ? "Nessun amico trovato per la ricerca" : "Nessun amico disponibile"))),
         React.createElement("div", { className: modalCreateGroup_module_css_1["default"]["action-buttons"] }, selectedFriends.length > 0 &&
             React.createElement(md_1.MdOutlineDone, { onClick: handleCreateGroup, className: modalCreateGroup_module_css_1["default"]["create-btn"] }))));
 }

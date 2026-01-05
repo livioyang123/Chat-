@@ -1,14 +1,16 @@
+// MODIFICA: fe-chat/src/components/chat/ModalAddFriend.tsx
 import { GiCrossMark } from "react-icons/gi";
 import { UserService } from "@/services";
 import { useEffect, useState, useCallback } from "react";
-import {  User } from "@/types/api";
+import { User, ChatRoom } from "@/types/api"; // ✨ Aggiungi ChatRoom
 import style from "@/styles/modalAddFriend.module.css";
 
 interface FuncProps {
   onAddFriendClick: (condition: boolean) => void;
+  onChatCreated?: (chat: ChatRoom) => void; // ✨ NUOVO callback
 }
 
-export default function ModalAddFriend({ onAddFriendClick }: FuncProps) {
+export default function ModalAddFriend({ onAddFriendClick, onChatCreated }: FuncProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
@@ -47,9 +49,16 @@ export default function ModalAddFriend({ onAddFriendClick }: FuncProps) {
     }
   }, [searchTerm, friends]);
 
+  // ✨ CORREZIONE: Aggiorna per gestire la chatroom creata
   const handleSendFriendRequest = async (userId: string) => {
     try {
-      await UserService.sendFriendRequest(userId);
+      const response = await UserService.sendFriendRequest(userId);
+      
+      // ✨ Se la risposta contiene una chatroom, notifica il parent
+      if (response && onChatCreated) {
+        onChatCreated(response as unknown as ChatRoom);
+      }
+      
       setSearchResults(prev => prev.filter(user => user.id !== userId));
     } catch (error) {
       console.error("Errore nell'invio della richiesta di amicizia:", error);
@@ -92,15 +101,12 @@ export default function ModalAddFriend({ onAddFriendClick }: FuncProps) {
             <div className={style["member-item"]} key={user.id}>
               <div className={style["user-info"]}>
                 <div className={style.username}>{user.username}</div>
-
-
-                  <div className={style["user-actions"]}>
+                <div className={style["user-actions"]}>
                   {isAlreadyFriend(user.id) ? (
                     <button className={style["already-friend-btn"]} disabled>
                       Già amico
                     </button>
-                  ) 
-                  : (
+                  ) : (
                     <button 
                       onClick={() => handleSendFriendRequest(user.id)}
                       className={style["add-friend-btn"]}
@@ -110,8 +116,6 @@ export default function ModalAddFriend({ onAddFriendClick }: FuncProps) {
                   )}
                 </div>
               </div>
-              
-
             </div>
           ))
         ) : searchTerm ? (

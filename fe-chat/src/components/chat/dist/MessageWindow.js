@@ -50,6 +50,10 @@ var image_1 = require("next/image");
 var messageWindow_module_css_1 = require("@/styles/messageWindow.module.css");
 var messageInput_module_css_1 = require("@/styles/messageInput.module.css");
 var mediaModal_module_css_1 = require("@/styles/mediaModal.module.css");
+var useContextMenu_1 = require("@/hooks/useContextMenu");
+var ContextMenu_1 = require("@/components/ContextMenu");
+var io5_2 = require("react-icons/io5");
+var gsap_1 = require("gsap");
 var MAX_FILE_SIZE = 100 * 1024 * 1024;
 var ALLOWED_FILE_TYPES = [
     'image/jpeg', 'image/png', 'image/gif', 'image/webp',
@@ -75,6 +79,80 @@ function MessageWindow(_a) {
     var connectionCallbackRef = react_1.useRef(null);
     var fileInputRef = react_1.useRef(null);
     var typingTimeoutRef = react_1.useRef(null);
+    var messagesContainerRef = react_1.useRef(null);
+    // ✨ Animazione Falling Text per nuovi messaggi
+    react_1.useEffect(function () {
+        if (!messagesContainerRef.current)
+            return;
+        // Osserva nuovi messaggi aggiunti
+        var observer = new MutationObserver(function (mutations) {
+            mutations.forEach(function (mutation) {
+                mutation.addedNodes.forEach(function (node) {
+                    if (node instanceof HTMLElement && node.classList.contains(messageWindow_module_css_1["default"].message)) {
+                        // Animazione falling con split text
+                        var textElement = node.querySelector("." + messageWindow_module_css_1["default"]["message-text"]);
+                        if (textElement && textElement.textContent) {
+                            var text = textElement.textContent;
+                            var chars = text.split('');
+                            textElement.innerHTML = chars
+                                .map(function (char) {
+                                return "<span class=\"" + messageWindow_module_css_1["default"].fallingChar + "\" style=\"display: inline-block; opacity: 0; transform: translateY(-20px);\">" + (char === ' ' ? '&nbsp;' : char) + "</span>";
+                            })
+                                .join('');
+                            var charElements = textElement.querySelectorAll("." + messageWindow_module_css_1["default"].fallingChar);
+                            gsap_1.gsap.to(charElements, {
+                                opacity: 1,
+                                y: 0,
+                                duration: 0.5,
+                                stagger: 0.02,
+                                ease: 'bounce.out'
+                            });
+                        }
+                    }
+                });
+            });
+        });
+        observer.observe(messagesContainerRef.current, {
+            childList: true,
+            subtree: true
+        });
+        return function () { return observer.disconnect(); };
+    }, []);
+    var contextMenu = useContextMenu_1.useContextMenu();
+    // Funzione per aprire menu su messaggio
+    var handleMessageContextMenu = function (e, message) {
+        var options = [];
+        // Solo per messaggi propri
+        if (message.senderId === currentUserId) {
+            options.push({
+                label: 'Elimina messaggio',
+                icon: React.createElement(io5_2.IoTrash, null),
+                danger: true,
+                onClick: function () { return __awaiter(_this, void 0, void 0, function () {
+                    var error_1;
+                    return __generator(this, function (_a) {
+                        switch (_a.label) {
+                            case 0:
+                                _a.trys.push([0, 2, , 3]);
+                                return [4 /*yield*/, messageService_1.MessageService.deleteMessage(message.id || '')];
+                            case 1:
+                                _a.sent();
+                                setMessages(function (prev) { return prev.filter(function (m) { return m.id !== message.id; }); });
+                                return [3 /*break*/, 3];
+                            case 2:
+                                error_1 = _a.sent();
+                                console.error('Errore eliminazione messaggio:', error_1);
+                                return [3 /*break*/, 3];
+                            case 3: return [2 /*return*/];
+                        }
+                    });
+                }); }
+            });
+        }
+        if (options.length > 0) {
+            contextMenu.openMenu(e, options);
+        }
+    };
     var scrollToBottom = function () {
         var _a;
         (_a = messagesEndRef.current) === null || _a === void 0 ? void 0 : _a.scrollIntoView({ behavior: 'smooth' });
@@ -298,6 +376,7 @@ function MessageWindow(_a) {
                 case 2:
                     fileUrl = (_b.sent()).url;
                     messageData = {
+                        id: null,
                         senderId: currentUserId,
                         chatRoomId: chatId,
                         content: newMessage.trim() || "",
@@ -308,6 +387,7 @@ function MessageWindow(_a) {
                     return [3 /*break*/, 4];
                 case 3:
                     messageData = {
+                        id: null,
                         content: newMessage.trim(),
                         senderId: currentUserId,
                         chatRoomId: chatId,
@@ -365,7 +445,9 @@ function MessageWindow(_a) {
             case 'VIDEO':
                 return renderVideo(message);
             default:
-                return React.createElement("div", { className: messageWindow_module_css_1["default"]["message-text"] }, message.content);
+                return React.createElement("div", { className: messageWindow_module_css_1["default"]["message-text"], onContextMenu: function (e) { return handleMessageContextMenu(e, message); } },
+                    message.content,
+                    React.createElement(ContextMenu_1["default"], { isOpen: contextMenu.isOpen, position: contextMenu.position, options: contextMenu.options, onClose: contextMenu.closeMenu }));
         }
     };
     var renderFilePreview = function () {
@@ -400,8 +482,8 @@ function MessageWindow(_a) {
                     " online")),
                 React.createElement("div", { className: messageWindow_module_css_1["default"]["status-indicator"] + " " + (isConnected ? messageWindow_module_css_1["default"].connected : messageWindow_module_css_1["default"].disconnected) }),
                 React.createElement("span", { className: messageWindow_module_css_1["default"]["status-text"] }, isConnected ? 'Online' : 'Offline'))),
-        React.createElement("div", { className: messageWindow_module_css_1["default"].messages },
-            messages.length === 0 ? (React.createElement("div", { className: messageWindow_module_css_1["default"]["no-messages"] }, "Nessun messaggio in questa chat")) : (messages.map(function (message, index) { return (React.createElement("div", { key: index, className: messageWindow_module_css_1["default"].message + " " + (message.senderId === currentUserId ? messageWindow_module_css_1["default"]["message-own"] : messageWindow_module_css_1["default"]["message-other"]) },
+        React.createElement("div", { ref: messagesContainerRef, className: messageWindow_module_css_1["default"].messages },
+            messages.length === 0 ? (React.createElement("div", { className: messageWindow_module_css_1["default"]["no-messages"] }, "Nessun messaggio in questa chat")) : (messages.map(function (message, index) { return (React.createElement("div", { key: index, className: messageWindow_module_css_1["default"].message + " " + (message.senderId === currentUserId ? messageWindow_module_css_1["default"]["message-own"] : messageWindow_module_css_1["default"]["message-other"]), onContextMenu: function (e) { return handleMessageContextMenu(e, message); } },
                 React.createElement("div", { className: messageWindow_module_css_1["default"]["message-meta"] },
                     React.createElement("span", { className: messageWindow_module_css_1["default"]["message-time"] }, message.timestamp ? formatTimestamp(message.timestamp) : '')),
                 React.createElement("div", { className: messageWindow_module_css_1["default"]["message-content"] },

@@ -7,6 +7,12 @@ import messageStyle from "@/styles/messageWindow.module.css";
 import inputStyle from "@/styles/messageInput.module.css";
 import modalStyle from "@/styles/mediaModal.module.css";
 
+import { useContextMenu } from '@/hooks/useContextMenu';
+import ContextMenu from '@/components/ContextMenu';
+import { IoTrash } from 'react-icons/io5';
+
+import { gsap } from 'gsap';
+
 interface MessageWindowProps {
   chatId: string;
   chatName: string;
@@ -40,6 +46,80 @@ export default function MessageWindow({ chatId, chatName, currentUserId, chatPar
   const connectionCallbackRef = useRef<(() => void) | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+
+  // ✨ Animazione Falling Text per nuovi messaggi
+  useEffect(() => {
+    if (!messagesContainerRef.current) return;
+
+    // Osserva nuovi messaggi aggiunti
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        mutation.addedNodes.forEach((node) => {
+          if (node instanceof HTMLElement && node.classList.contains(messageStyle.message)) {
+            // Animazione falling con split text
+            const textElement = node.querySelector(`.${messageStyle["message-text"]}`);
+            if (textElement && textElement.textContent) {
+              const text = textElement.textContent;
+              const chars = text.split('');
+              
+              textElement.innerHTML = chars
+                .map((char) => 
+                  `<span class="${messageStyle.fallingChar}" style="display: inline-block; opacity: 0; transform: translateY(-20px);">${char === ' ' ? '&nbsp;' : char}</span>`
+                )
+                .join('');
+
+              const charElements = textElement.querySelectorAll(`.${messageStyle.fallingChar}`);
+              
+              gsap.to(charElements, {
+                opacity: 1,
+                y: 0,
+                duration: 0.5,
+                stagger: 0.02,
+                ease: 'bounce.out'
+              });
+            }
+          }
+        });
+      });
+    });
+
+    observer.observe(messagesContainerRef.current, {
+      childList: true,
+      subtree: true
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
+  const contextMenu = useContextMenu();
+
+  // Funzione per aprire menu su messaggio
+  const handleMessageContextMenu = (e: React.MouseEvent, message: ChatMessage) => {
+    const options = [];
+
+    // Solo per messaggi propri
+    if (message.senderId === currentUserId) {
+      options.push({
+        label: 'Elimina messaggio',
+        icon: <IoTrash />,
+        danger: true,
+        onClick: async () => {
+          try {
+            await MessageService.deleteMessage(message.id || '');
+            setMessages(prev => prev.filter(m => m.id !== message.id));
+          } catch (error) {
+            console.error('Errore eliminazione messaggio:', error);
+          }
+        }
+      });
+    }
+
+    if (options.length > 0) {
+      contextMenu.openMenu(e, options);
+    }
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -263,6 +343,7 @@ export default function MessageWindow({ chatId, chatName, currentUserId, chatPar
         const { url: fileUrl } = await MessageService.uploadFile(selectedFile, chatId);
         
         messageData = {
+          id: null as unknown as string,
           senderId: currentUserId,
           chatRoomId: chatId,
           content: newMessage.trim() || "",
@@ -272,6 +353,7 @@ export default function MessageWindow({ chatId, chatName, currentUserId, chatPar
         };
       } else {
         messageData = {
+          id: null as unknown as string,
           content: newMessage.trim(),
           senderId: currentUserId,
           chatRoomId: chatId,
@@ -358,7 +440,16 @@ export default function MessageWindow({ chatId, chatName, currentUserId, chatPar
       case 'VIDEO':
         return renderVideo(message);
       default:
-        return <div className={messageStyle["message-text"]}>{message.content}</div>;
+        return <div className={messageStyle["message-text"]}
+                onContextMenu={(e) => handleMessageContextMenu(e, message)}>
+                  {message.content}
+                  <ContextMenu
+                    isOpen={contextMenu.isOpen}
+                    position={contextMenu.position}
+                    options={contextMenu.options}
+                    onClose={contextMenu.closeMenu}
+                  />
+                </div>;   
     }
   };
 
@@ -434,7 +525,7 @@ export default function MessageWindow({ chatId, chatName, currentUserId, chatPar
         </div>
       </div>
 
-      <div className={messageStyle.messages}>
+      <div ref={messagesContainerRef} className={messageStyle.messages}>
         {messages.length === 0 ? (
           <div className={messageStyle["no-messages"]}>Nessun messaggio in questa chat</div>
         ) : (
@@ -442,6 +533,7 @@ export default function MessageWindow({ chatId, chatName, currentUserId, chatPar
             <div
               key={index}
               className={`${messageStyle.message} ${message.senderId === currentUserId ? messageStyle["message-own"] : messageStyle["message-other"]}`}
+              onContextMenu={(e) => handleMessageContextMenu(e, message)}
             >
               <div className={messageStyle["message-meta"]}>
                 <span className={messageStyle["message-time"]}>

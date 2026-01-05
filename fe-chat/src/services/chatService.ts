@@ -68,6 +68,8 @@ export class ChatService {
     await ApiService.delete(`/chats/${chatId}`);
   }
 
+
+
   // Partecipa a una chat
   static async joinChat(chatId: string): Promise<ChatRoom> {
     const response = await ApiService.post<ApiResponse<ChatRoom>>(`/chats/${chatId}/join`);
@@ -76,7 +78,7 @@ export class ChatService {
 
   // Lascia una chat
   static async leaveChat(chatId: string): Promise<void> {
-    await ApiService.post(`/chats/${chatId}/leave`);
+    await ApiService.post(`/chats/${chatId}/remove-participant/${AuthService.getCurrentUserId()}`);
   }
 
   // Aggiungi partecipante a una chat

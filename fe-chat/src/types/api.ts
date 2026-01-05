@@ -63,6 +63,7 @@ export interface CreateChatRequest {
 }
 
 export interface ChatMessage {
+  id:string;
   content: string;
   senderId: string;
   chatRoomId: string;
