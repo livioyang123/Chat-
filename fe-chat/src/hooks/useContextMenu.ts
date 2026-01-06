@@ -1,22 +1,17 @@
-// NUOVO FILE: fe-chat/src/hooks/useContextMenu.ts
-import { useState, useEffect, useCallback, useRef } from 'react';
+// fe-chat/src/hooks/useContextMenu.ts - VERSIONE CORRETTA
+import { useState, useEffect, useCallback } from 'react';
 
 export interface ContextMenuOption {
   label: string;
-  icon?: React.ReactNode;
+  icon?: string;
   onClick: () => void;
-  danger?: boolean; // Per evidenziare azioni pericolose (elimina, abbandona)
+  danger?: boolean;
   disabled?: boolean;
-}
-
-interface ContextMenuPosition {
-  x: number;
-  y: number;
 }
 
 interface UseContextMenuReturn {
   isOpen: boolean;
-  position: ContextMenuPosition;
+  position: { x: number; y: number };
   options: ContextMenuOption[];
   openMenu: (e: React.MouseEvent, options: ContextMenuOption[]) => void;
   closeMenu: () => void;
@@ -24,101 +19,113 @@ interface UseContextMenuReturn {
 
 export function useContextMenu(): UseContextMenuReturn {
   const [isOpen, setIsOpen] = useState(false);
-  const [position, setPosition] = useState<ContextMenuPosition>({ x: 0, y: 0 });
+  const [position, setPosition] = useState({ x: 0, y: 0 });
   const [options, setOptions] = useState<ContextMenuOption[]>([]);
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  // ✨ Calcola posizione ottimale del menu
-  const calculatePosition = useCallback((e: React.MouseEvent) => {
-    const menuWidth = 200; // Larghezza menu approssimativa
-    const menuHeight = 40 * options.length; // Altezza basata su numero opzioni
-    
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
-    
-    let x = e.clientX;
-    let y = e.clientY;
-    
-    // Se menu esce a destra, spostalo a sinistra
-    if (x + menuWidth > viewportWidth) {
-      x = e.clientX - menuWidth;
-    }
-    
-    // Se menu esce in basso, spostalo sopra
-    if (y + menuHeight > viewportHeight) {
-      y = e.clientY - menuHeight;
-    }
-    
-    // Assicura che non esca mai dal viewport
-    x = Math.max(10, Math.min(x, viewportWidth - menuWidth - 10));
-    y = Math.max(10, Math.min(y, viewportHeight - menuHeight - 10));
-    
-    return { x, y };
-  }, [options.length]);
 
   const openMenu = useCallback((e: React.MouseEvent, menuOptions: ContextMenuOption[]) => {
     e.preventDefault();
     e.stopPropagation();
     
-    setOptions(menuOptions);
+    const MENU_WIDTH = 200;
+    const MENU_HEIGHT = menuOptions.length * 44 + 12;
+    const CURSOR_OFFSET = 2; // Offset minimo dal cursore
     
-    // Calcola posizione dopo aver impostato le opzioni
-    setTimeout(() => {
-      const pos = calculatePosition(e);
-      setPosition(pos);
-      setIsOpen(true);
-    }, 0);
-  }, [calculatePosition]);
+    // ✨ FIX: Posizione esatta del mouse
+    const mouseX = e.clientX;
+    const mouseY = e.clientY;
+    
+    let x = mouseX;
+    let y = mouseY;
+    
+    // ✨ CORREZIONE: Controlla spazio disponibile a destra
+    const spaceRight = window.innerWidth - mouseX;
+    const spaceBottom = window.innerHeight - mouseY;
+    
+    // Se non c'è spazio a destra, mostra a SINISTRA del cursore
+    if (spaceRight < MENU_WIDTH + 10) {
+      x = mouseX - MENU_WIDTH - CURSOR_OFFSET;
+    } else {
+      x = mouseX + CURSOR_OFFSET;
+    }
+    
+    // Se non c'è spazio sotto, mostra SOPRA il cursore
+    if (spaceBottom < MENU_HEIGHT + 10) {
+      y = mouseY - MENU_HEIGHT - CURSOR_OFFSET;
+    } else {
+      y = mouseY + CURSOR_OFFSET;
+    }
+    
+    // Assicura che non esca mai dallo schermo
+    x = Math.max(10, Math.min(x, window.innerWidth - MENU_WIDTH - 10));
+    y = Math.max(10, Math.min(y, window.innerHeight - MENU_HEIGHT - 10));
+    
+    setPosition({ x, y });
+    setOptions(menuOptions);
+    setIsOpen(true);
+  }, []);
 
   const closeMenu = useCallback(() => {
     setIsOpen(false);
   }, []);
 
-  // Chiudi menu al click fuori
+  // Chiudi al click fuori
   useEffect(() => {
+    if (!isOpen) return;
+
     const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+      const target = event.target as HTMLElement;
+      if (!target.closest('[role="menu"]')) {
         closeMenu();
       }
     };
 
-    const handleScroll = () => {
-      closeMenu();
+    const handleScroll = () => closeMenu();
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeMenu();
     };
 
-    if (isOpen) {
+    setTimeout(() => {
       document.addEventListener('mousedown', handleClickOutside);
       document.addEventListener('scroll', handleScroll, true);
-      // Disabilita il context menu di default del browser
-      document.addEventListener('contextmenu', (e) => e.preventDefault());
-      
-      return () => {
-        document.removeEventListener('mousedown', handleClickOutside);
-        document.removeEventListener('scroll', handleScroll, true);
-        document.removeEventListener('contextmenu', (e) => e.preventDefault());
-      };
-    }
-  }, [isOpen, closeMenu]);
-
-  // Chiudi con ESC
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        closeMenu();
-      }
-    };
-
-    if (isOpen) {
       document.addEventListener('keydown', handleEscape);
-      return () => document.removeEventListener('keydown', handleEscape);
-    }
+    }, 100);
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('scroll', handleScroll, true);
+      document.removeEventListener('keydown', handleEscape);
+    };
   }, [isOpen, closeMenu]);
 
-  return {
-    isOpen,
-    position,
-    options,
-    openMenu,
-    closeMenu
-  };
+  return { isOpen, position, options, openMenu, closeMenu };
 }
+
+// ✨ Factory per opzioni comuni
+export const ContextMenuActions = {
+  manageMembers: (onManage: () => void): ContextMenuOption => ({
+    label: 'Gestisci membri',
+    icon: '👥',
+    onClick: onManage
+  }),
+
+  leaveGroup: (chatName: string, onLeave: () => void): ContextMenuOption => ({
+    label: 'Abbandona gruppo',
+    icon: '🚪',
+    danger: true,
+    onClick: onLeave
+  }),
+
+  deleteChat: (chatName: string, onDelete: () => void): ContextMenuOption => ({
+    label: 'Elimina chat',
+    icon: '🗑️',
+    danger: true,
+    onClick: onDelete
+  }),
+
+  deleteMessage: (onDelete: () => void): ContextMenuOption => ({
+    label: 'Elimina messaggio',
+    icon: '🗑️',
+    danger: true,
+    onClick: onDelete
+  })
+};

@@ -125,7 +125,7 @@ const LoginComponent = () => {
       </form>
 
       <div className="register-link">
-        Non hai un account? <Link href="/register" prefetch={true}>Registrati</Link>
+        Non hai un account? <Link href="/register" prefetch={true} className='a'>Registrati</Link>
       </div>
     </div>
   );

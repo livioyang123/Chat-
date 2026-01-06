@@ -89,14 +89,47 @@ var MessageService = /** @class */ (function () {
         });
     };
     // Elimina un messaggio
-    MessageService.deleteMessage = function (messageId) {
+    MessageService.deleteMessage = function (messageId, chatId, userId) {
         return __awaiter(this, void 0, Promise, function () {
+            var username, notification, error_1;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, api_1.ApiService["delete"]("/messages/" + messageId)];
+                    case 0:
+                        _a.trys.push([0, 2, , 3]);
+                        // Elimina dal database
+                        return [4 /*yield*/, api_1.ApiService["delete"]("/messages/" + messageId)];
                     case 1:
+                        // Elimina dal database
                         _a.sent();
-                        return [2 /*return*/];
+                        // Invia notifica via WebSocket
+                        if (this.stompClient && this.isConnected) {
+                            username = typeof window !== 'undefined'
+                                ? sessionStorage.getItem('currentUser')
+                                : null;
+                            notification = {
+                                id: messageId,
+                                content: JSON.stringify({
+                                    deletedBy: userId,
+                                    deletedByUsername: username,
+                                    originalMessageId: messageId,
+                                    deletedAt: new Date().toISOString()
+                                }),
+                                senderId: 'SYSTEM',
+                                chatRoomId: chatId,
+                                type: 'DELETED_MESSAGE',
+                                timestamp: new Date().toISOString()
+                            };
+                            this.stompClient.publish({
+                                destination: '/app/chat.sendMessage',
+                                body: JSON.stringify(notification)
+                            });
+                        }
+                        return [3 /*break*/, 3];
+                    case 2:
+                        error_1 = _a.sent();
+                        console.error('Error deleting message:', error_1);
+                        throw error_1;
+                    case 3: return [2 /*return*/];
                 }
             });
         });
@@ -120,7 +153,7 @@ var MessageService = /** @class */ (function () {
     // Upload file/immagine
     MessageService.uploadFile = function (file, chatId) {
         return __awaiter(this, void 0, Promise, function () {
-            var formData, response, error_1;
+            var formData, response, error_2;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -156,13 +189,13 @@ var MessageService = /** @class */ (function () {
                         });
                         return [2 /*return*/, response.data];
                     case 3:
-                        error_1 = _a.sent();
-                        console.error('❌ Upload error:', error_1);
-                        if (error_1 instanceof Error) {
-                            console.error('Error message:', error_1.message);
-                            console.error('Error stack:', error_1.stack);
+                        error_2 = _a.sent();
+                        console.error('❌ Upload error:', error_2);
+                        if (error_2 instanceof Error) {
+                            console.error('Error message:', error_2.message);
+                            console.error('Error stack:', error_2.stack);
                         }
-                        throw error_1 instanceof Error ? error_1 : new Error('Errore sconosciuto durante upload');
+                        throw error_2 instanceof Error ? error_2 : new Error('Errore sconosciuto durante upload');
                     case 4: return [2 /*return*/];
                 }
             });
@@ -170,7 +203,7 @@ var MessageService = /** @class */ (function () {
     };
     MessageService.debugChatMessages = function (chatId) {
         return __awaiter(this, void 0, Promise, function () {
-            var messages, error_2;
+            var messages, error_3;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -196,8 +229,8 @@ var MessageService = /** @class */ (function () {
                         });
                         return [3 /*break*/, 3];
                     case 2:
-                        error_2 = _a.sent();
-                        console.error('❌ Error debugging chat messages:', error_2);
+                        error_3 = _a.sent();
+                        console.error('❌ Error debugging chat messages:', error_3);
                         return [3 /*break*/, 3];
                     case 3: return [2 /*return*/];
                 }
@@ -452,6 +485,7 @@ var MessageService = /** @class */ (function () {
         console.log('📞 Sending call invitation:', invitation);
         this.sendMessage({
             // ID sarà assegnato dal server
+            id: '',
             content: JSON.stringify(invitation),
             senderId: senderId,
             chatRoomId: chatId,
@@ -463,6 +497,7 @@ var MessageService = /** @class */ (function () {
     MessageService.sendCallEvent = function (chatId, senderId, event) {
         console.log('📞 Sending call event:', event);
         this.sendMessage({
+            id: '',
             content: JSON.stringify(event),
             senderId: senderId,
             chatRoomId: chatId,
@@ -474,6 +509,7 @@ var MessageService = /** @class */ (function () {
     MessageService.sendWebRTCSignal = function (chatId, senderId, signal) {
         console.log('🔄 Sending WebRTC signal:', signal);
         this.sendMessage({
+            id: '',
             content: JSON.stringify(signal),
             senderId: senderId,
             chatRoomId: chatId,

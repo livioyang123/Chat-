@@ -67,7 +67,7 @@ export interface ChatMessage {
   content: string;
   senderId: string;
   chatRoomId: string;
-  type?: 'CHAT' | 'IMAGE' | 'VIDEO'|'WEBRTC_SIGNAL' | 'CALL_INVITATION' | 'CALL_EVENT';
+  type?: 'CHAT' | 'IMAGE' | 'VIDEO'|'WEBRTC_SIGNAL' | 'CALL_INVITATION' | 'CALL_EVENT'| 'DELETED_MESSAGE';
   fileUrl?: string;
   fileName?: string;
   timestamp?:string
@@ -120,4 +120,13 @@ export interface UploadResponse {
     fileName: string;
     fileSize: number;
   } | null;
+}
+
+export interface DeletedMessageNotification {
+  id: string;
+  chatRoomId: string;
+  deletedBy: string;
+  deletedByUsername: string;
+  deletedAt: string;
+  type: 'DELETED_MESSAGE';
 }

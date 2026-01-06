@@ -158,6 +158,6 @@ var LoginComponent = function () {
             error && (React.createElement("div", { className: "error-message", "aria-live": "polite" }, error))),
         React.createElement("div", { className: "register-link" },
             "Non hai un account? ",
-            React.createElement(link_1["default"], { href: "/register", prefetch: true }, "Registrati"))));
+            React.createElement(link_1["default"], { href: "/register", prefetch: true, className: 'a' }, "Registrati"))));
 };
 exports["default"] = LoginComponent;

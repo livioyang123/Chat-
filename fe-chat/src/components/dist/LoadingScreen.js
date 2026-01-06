@@ -1,4 +1,4 @@
-// MODIFICA COMPLETA: fe-chat/src/components/LoadingScreen.tsx
+// fe-chat/src/components/LoadingScreen.tsx - VERSIONE CORRETTA
 'use client';
 "use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
@@ -48,15 +48,15 @@ function LoadingScreen(_a) {
     var onComplete = _a.onComplete;
     var _b = react_1.useState(0), progress = _b[0], setProgress = _b[1];
     var isLoadingRef = react_1.useRef(false);
+    var hasLoadedRef = react_1.useRef(false); // ✨ Previene reload
     var gridRef = react_1.useRef(null);
     var sparkContainerRef = react_1.useRef(null);
-    // ✨ Animazione Grid Scan
+    // Grid Scan Animation
     react_1.useEffect(function () {
         if (!gridRef.current)
             return;
         var grid = gridRef.current;
         var cells = grid.querySelectorAll("." + loading_module_css_1["default"].gridCell);
-        // Animazione scan continua
         gsap_1.gsap.to(cells, {
             opacity: 0.8,
             scale: 1.05,
@@ -69,18 +69,17 @@ function LoadingScreen(_a) {
             duration: 0.5,
             ease: 'power2.inOut'
         });
-        // Scan line orizzontale
         var scanLine = grid.querySelector("." + loading_module_css_1["default"].scanLine);
         if (scanLine) {
             gsap_1.gsap.to(scanLine, {
                 y: '100vh',
-                duration: 2,
+                duration: 1.5,
                 repeat: -1,
                 ease: 'none'
             });
         }
     }, []);
-    // ✨ Click Spark Effect
+    // Click Spark Effect
     react_1.useEffect(function () {
         var handleClick = function (e) {
             if (!sparkContainerRef.current)
@@ -90,15 +89,12 @@ function LoadingScreen(_a) {
             spark.style.left = e.clientX + "px";
             spark.style.top = e.clientY + "px";
             sparkContainerRef.current.appendChild(spark);
-            // Animazione con GSAP
             gsap_1.gsap.to(spark, {
                 scale: 2,
                 opacity: 0,
                 duration: 0.6,
                 ease: 'power2.out',
-                onComplete: function () {
-                    spark.remove();
-                }
+                onComplete: function () { return spark.remove(); }
             });
             var _loop_1 = function (i) {
                 var particle = document.createElement('div');
@@ -117,12 +113,9 @@ function LoadingScreen(_a) {
                     scale: 0,
                     duration: 0.8,
                     ease: 'power2.out',
-                    onComplete: function () {
-                        particle.remove();
-                    }
+                    onComplete: function () { return particle.remove(); }
                 });
             };
-            // Spark particles
             for (var i = 0; i < 6; i++) {
                 _loop_1(i);
             }
@@ -130,51 +123,73 @@ function LoadingScreen(_a) {
         document.addEventListener('click', handleClick);
         return function () { return document.removeEventListener('click', handleClick); };
     }, []);
-    // Preload data (mantieni logica originale)
+    // ✨ FIX: Preload con controllo duplicazioni
     react_1.useEffect(function () {
-        if (isLoadingRef.current)
+        // Previeni multiple esecuzioni
+        if (isLoadingRef.current || hasLoadedRef.current)
             return;
         isLoadingRef.current = true;
+        hasLoadedRef.current = true;
         var preloadData = function () { return __awaiter(_this, void 0, void 0, function () {
-            var chatError_1, error_1;
+            var error_1, chats, error_2, error_3;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        _a.trys.push([0, 6, , 7]);
+                        _a.trys.push([0, 8, 9, 10]);
+                        console.log('🚀 Starting preload...');
                         setProgress(10);
-                        return [4 /*yield*/, messageService_1.MessageService.initializeWebSocket()];
+                        _a.label = 1;
                     case 1:
-                        _a.sent();
-                        setProgress(40);
-                        _a.label = 2;
+                        _a.trys.push([1, 3, , 4]);
+                        return [4 /*yield*/, messageService_1.MessageService.initializeWebSocket()];
                     case 2:
-                        _a.trys.push([2, 4, , 5]);
-                        return [4 /*yield*/, services_1.ChatService.getUserChats()];
-                    case 3:
                         _a.sent();
-                        return [3 /*break*/, 5];
+                        console.log('✅ WebSocket initialized');
+                        setProgress(40);
+                        return [3 /*break*/, 4];
+                    case 3:
+                        error_1 = _a.sent();
+                        console.warn('⚠️ WebSocket init failed:', error_1);
+                        setProgress(40);
+                        return [3 /*break*/, 4];
                     case 4:
-                        chatError_1 = _a.sent();
-                        console.warn('No chats found (new user):', chatError_1);
-                        return [3 /*break*/, 5];
+                        _a.trys.push([4, 6, , 7]);
+                        return [4 /*yield*/, services_1.ChatService.getUserChats()];
                     case 5:
+                        chats = _a.sent();
+                        console.log('✅ Chats loaded:', chats.length);
                         setProgress(90);
-                        setProgress(100);
-                        setTimeout(function () { return onComplete(); }, 100);
                         return [3 /*break*/, 7];
                     case 6:
-                        error_1 = _a.sent();
-                        console.error('Critical error during preload:', error_1);
-                        setProgress(100);
-                        setTimeout(function () { return onComplete(); }, 200);
+                        error_2 = _a.sent();
+                        console.warn('⚠️ No chats found (new user or error):', error_2);
+                        setProgress(90);
                         return [3 /*break*/, 7];
-                    case 7: return [2 /*return*/];
+                    case 7:
+                        // Completa
+                        setProgress(100);
+                        console.log('✅ Preload complete');
+                        setTimeout(function () {
+                            onComplete();
+                        }, 500);
+                        return [3 /*break*/, 10];
+                    case 8:
+                        error_3 = _a.sent();
+                        console.error('❌ Critical error during preload:', error_3);
+                        setProgress(100);
+                        setTimeout(function () { return onComplete(); }, 500);
+                        return [3 /*break*/, 10];
+                    case 9:
+                        isLoadingRef.current = false;
+                        return [7 /*endfinally*/];
+                    case 10: return [2 /*return*/];
                 }
             });
         }); };
         preloadData();
+        // Cleanup: reset refs solo al unmount completo
         return function () {
-            isLoadingRef.current = false;
+            // Non resettare hasLoadedRef qui per evitare ricaricamenti
         };
     }, [onComplete]);
     return (React.createElement("div", { className: loading_module_css_1["default"].loadingContainer },

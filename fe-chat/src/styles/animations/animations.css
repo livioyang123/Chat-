@@ -1,0 +1,195 @@
+/* fe-chat/src/styles/animations.css - NUOVO FILE */
+
+/* ========================================
+   GLOBAL ANIMATIONS
+   ======================================== */
+
+/* Falling Text Animation */
+@keyframes fallIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) rotateX(90deg);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) rotateX(0);
+  }
+}
+
+.fallText {
+  display: inline-block;
+  animation: fallIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.fallText:nth-child(1) { animation-delay: 0.05s; }
+.fallText:nth-child(2) { animation-delay: 0.1s; }
+.fallText:nth-child(3) { animation-delay: 0.15s; }
+.fallText:nth-child(4) { animation-delay: 0.2s; }
+.fallText:nth-child(5) { animation-delay: 0.25s; }
+.fallText:nth-child(6) { animation-delay: 0.3s; }
+.fallText:nth-child(7) { animation-delay: 0.35s; }
+.fallText:nth-child(8) { animation-delay: 0.4s; }
+.fallText:nth-child(9) { animation-delay: 0.45s; }
+.fallText:nth-child(10) { animation-delay: 0.5s; }
+
+/* Click Spark Effect */
+.clickSpark {
+  position: fixed;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.8) 0%, transparent 70%);
+  box-shadow: 0 0 30px rgba(99, 102, 241, 0.6);
+  pointer-events: none;
+  z-index: 99999;
+  animation: sparkExpand 0.6s ease-out forwards;
+}
+
+@keyframes sparkExpand {
+  0% {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(3);
+    opacity: 0;
+  }
+}
+
+.sparkParticle {
+  position: fixed;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #6366f1;
+  box-shadow: 0 0 15px #6366f1;
+  pointer-events: none;
+  z-index: 99998;
+  animation: particleFloat 0.8s ease-out forwards;
+}
+
+@keyframes particleFloat {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) translateY(-60px) scale(0);
+    opacity: 0;
+  }
+}
+
+/* Smooth Fade In */
+@keyframes smoothFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fadeIn {
+  animation: smoothFadeIn 0.4s ease-out;
+}
+
+/* Slide In From Left */
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.slideLeft {
+  animation: slideInLeft 0.3s ease-out;
+}
+
+/* Slide In From Right */
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.slideRight {
+  animation: slideInRight 0.3s ease-out;
+}
+
+/* Scale Up */
+@keyframes scaleUp {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.scaleUp {
+  animation: scaleUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Pulse */
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.8;
+  }
+}
+
+.pulse {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* Shimmer */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  background-size: 1000px 100%;
+  animation: shimmer 2s infinite linear;
+}
+
+/* Bounce */
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.bounce {
+  animation: bounce 1s ease-in-out infinite;
+}

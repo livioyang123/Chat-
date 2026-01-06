@@ -1,11 +1,12 @@
+// fe-chat/src/components/chat/ChatWindow.tsx - AGGIORNATO
 import { useEffect, useState, useCallback, Suspense, lazy } from "react";
 import { IoIosSettings } from "react-icons/io";
+import ModalSettings from "@/components/ModalSettings";
 import style from "@/styles/chatWindow.module.css";
 
 const ChatList = lazy(() => import("./ChatList"));
 const MessageWindow = lazy(() => import("./MessageWindow"));
 
-// Fallback senza testo
 const ChatListFallback = () => (
   <div className={style["chat-list-fallback"]}></div>
 );
@@ -20,6 +21,7 @@ export default function ChatWindow() {
   const [currentUserId, setUserId] = useState("");
   const [chatParticipants, setChatParticipants] = useState<string[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [showSettings, setShowSettings] = useState(false); // ✨ NUOVO
 
   useEffect(() => {
     const userId = sessionStorage.getItem('currentUser');
@@ -50,8 +52,13 @@ export default function ChatWindow() {
     <div className={style["window-container"]}>
       <div className={style["settings-container"]}>
         <div className={style["setting"]}>
-          <button title="Settings" className={style["btnSetting"]}><IoIosSettings /></button>
-          <button title="Settings" className={style["btnSetting"]}><IoIosSettings /></button>
+          <button 
+            title="Impostazioni" 
+            className={style["btnSetting"]}
+            onClick={() => setShowSettings(true)}
+          >
+            <IoIosSettings />
+          </button>
         </div>
       </div>
 
@@ -67,6 +74,10 @@ export default function ChatWindow() {
           chatParticipants={chatParticipants}
         />
       </Suspense>
+
+      {showSettings && (
+        <ModalSettings onClose={() => setShowSettings(false)} />
+      )}
     </div>
   );
 }

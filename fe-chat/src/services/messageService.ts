@@ -28,8 +28,40 @@ export class MessageService {
   }
 
   // Elimina un messaggio
-  static async deleteMessage(messageId: string): Promise<void> {
-    await ApiService.delete(`/messages/${messageId}`);
+  static async deleteMessage(messageId: string, chatId: string, userId: string): Promise<void> {
+    try {
+      // Elimina dal database
+      await ApiService.delete(`/messages/${messageId}`);
+      
+      // Invia notifica via WebSocket
+      if (this.stompClient && this.isConnected) {
+        const username = typeof window !== 'undefined' 
+          ? sessionStorage.getItem('currentUser') 
+          : null;
+
+        const notification: ChatMessage = {
+          id: messageId,
+          content: JSON.stringify({
+            deletedBy: userId,
+            deletedByUsername: username,
+            originalMessageId: messageId,
+            deletedAt: new Date().toISOString()
+          }),
+          senderId: 'SYSTEM',
+          chatRoomId: chatId,
+          type: 'DELETED_MESSAGE' ,
+          timestamp: new Date().toISOString()
+        };
+
+        this.stompClient.publish({
+          destination: '/app/chat.sendMessage',
+          body: JSON.stringify(notification)
+        });
+      }
+    } catch (error) {
+      console.error('Error deleting message:', error);
+      throw error;
+    }
   }
 
   // Cerca messaggi
@@ -418,6 +450,7 @@ export class MessageService {
     
     this.sendMessage({
       // ID sarà assegnato dal server
+      id: '',
       content: JSON.stringify(invitation),
       senderId,
       chatRoomId: chatId,
@@ -435,7 +468,8 @@ export class MessageService {
     console.log('📞 Sending call event:', event);
     
     this.sendMessage({
-      
+
+      id: '',
       content: JSON.stringify(event),
       senderId,
       chatRoomId: chatId,
@@ -453,7 +487,8 @@ export class MessageService {
     console.log('🔄 Sending WebRTC signal:', signal);
     
     this.sendMessage({
-      
+
+      id: '',
       content: JSON.stringify(signal),
       senderId,
       chatRoomId: chatId,

@@ -43,104 +43,81 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
     return r;
 };
 exports.__esModule = true;
-//TODO : add avatar and lastMessage notice
+// fe-chat/src/components/chat/ChatList.tsx - AGGIORNATO
 var services_1 = require("@/services");
 var react_1 = require("react");
 var ModalCreateGroup_1 = require("./ModalCreateGroup");
 var ModalAddFriend_1 = require("./ModalAddFriend");
+var ModalManageMembers_1 = require("./ModalManageMembers");
 var chatList_module_css_1 = require("@/styles/chatList.module.css");
 var ChatHeader_1 = require("@/components/chat/ChatHeader");
 var useContextMenu_1 = require("@/hooks/useContextMenu");
 var ContextMenu_1 = require("@/components/ContextMenu");
-var io5_1 = require("react-icons/io5");
 function ChatList(_a) {
     var _this = this;
     var onButtonClick = _a.onButtonClick;
     var _b = react_1.useState([]), chats = _b[0], setChats = _b[1];
     var _c = react_1.useState(false), openGroupModal = _c[0], setOpenGroupModal = _c[1];
     var _d = react_1.useState(false), openFriendModal = _d[0], setOpenFriendModal = _d[1];
+    var _e = react_1.useState(null), manageMembersChat = _e[0], setManageMembersChat = _e[1];
     var contextMenu = useContextMenu_1.useContextMenu();
     var handleChatContextMenu = function (e, chat) {
-        e.stopPropagation(); // Evita che apra la chat
-        //const currentUserId = AuthService.getCurrentUserId();
+        e.stopPropagation();
         var isGroup = chat.participantIds.length > 2;
         var options = [];
         if (isGroup) {
-            options.push({
-                label: 'Gestisci membri',
-                icon: React.createElement(io5_1.IoPeople, null),
-                onClick: function () {
-                    console.log('Apri modal gestione membri per:', chat.id);
-                    // TODO: Implementa modal gestione membri
-                }
-            });
-            options.push({
-                label: 'Abbandona gruppo',
-                icon: React.createElement(io5_1.IoExit, null),
-                danger: true,
-                onClick: function () { return __awaiter(_this, void 0, void 0, function () {
-                    var error_1;
-                    return __generator(this, function (_a) {
-                        switch (_a.label) {
-                            case 0:
-                                if (!confirm("Vuoi abbandonare " + chat.name + "?")) return [3 /*break*/, 4];
-                                _a.label = 1;
-                            case 1:
-                                _a.trys.push([1, 3, , 4]);
-                                return [4 /*yield*/, services_1.ChatService.leaveChat(chat.id)];
-                            case 2:
-                                _a.sent();
-                                setChats(function (prev) { return prev.filter(function (c) { return c.id !== chat.id; }); });
-                                return [3 /*break*/, 4];
-                            case 3:
-                                error_1 = _a.sent();
-                                console.error('Errore abbandono chat:', error_1);
-                                return [3 /*break*/, 4];
-                            case 4: return [2 /*return*/];
-                        }
-                    });
-                }); }
-            });
+            options.push(useContextMenu_1.ContextMenuActions.manageMembers(function () {
+                setManageMembersChat(chat);
+            }), useContextMenu_1.ContextMenuActions.leaveGroup(chat.name, function () { return __awaiter(_this, void 0, void 0, function () {
+                var error_1;
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0:
+                            if (!confirm("Vuoi abbandonare " + chat.name + "?")) return [3 /*break*/, 4];
+                            _a.label = 1;
+                        case 1:
+                            _a.trys.push([1, 3, , 4]);
+                            return [4 /*yield*/, services_1.ChatService.leaveChat(chat.id)];
+                        case 2:
+                            _a.sent();
+                            setChats(function (prev) { return prev.filter(function (c) { return c.id !== chat.id; }); });
+                            return [3 /*break*/, 4];
+                        case 3:
+                            error_1 = _a.sent();
+                            console.error('Errore abbandono gruppo:', error_1);
+                            alert('Errore nell\'abbandono del gruppo');
+                            return [3 /*break*/, 4];
+                        case 4: return [2 /*return*/];
+                    }
+                });
+            }); }));
         }
         else {
-            options.push({
-                label: 'Elimina chat',
-                icon: React.createElement(io5_1.IoTrash, null),
-                danger: true,
-                onClick: function () { return __awaiter(_this, void 0, void 0, function () {
-                    var error_2;
-                    return __generator(this, function (_a) {
-                        switch (_a.label) {
-                            case 0:
-                                if (!confirm("Vuoi eliminare la chat con " + chat.name + "?")) return [3 /*break*/, 4];
-                                _a.label = 1;
-                            case 1:
-                                _a.trys.push([1, 3, , 4]);
-                                return [4 /*yield*/, services_1.ChatService.deleteChat(chat.id)];
-                            case 2:
-                                _a.sent();
-                                setChats(function (prev) { return prev.filter(function (c) { return c.id !== chat.id; }); });
-                                return [3 /*break*/, 4];
-                            case 3:
-                                error_2 = _a.sent();
-                                console.error('Errore eliminazione chat:', error_2);
-                                return [3 /*break*/, 4];
-                            case 4: return [2 /*return*/];
-                        }
-                    });
-                }); }
-            });
+            options.push(useContextMenu_1.ContextMenuActions.deleteChat(chat.name, function () { return __awaiter(_this, void 0, void 0, function () {
+                var error_2;
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0:
+                            if (!confirm("Vuoi eliminare la chat con " + chat.name + "?")) return [3 /*break*/, 4];
+                            _a.label = 1;
+                        case 1:
+                            _a.trys.push([1, 3, , 4]);
+                            return [4 /*yield*/, services_1.ChatService.deleteChat(chat.id)];
+                        case 2:
+                            _a.sent();
+                            setChats(function (prev) { return prev.filter(function (c) { return c.id !== chat.id; }); });
+                            return [3 /*break*/, 4];
+                        case 3:
+                            error_2 = _a.sent();
+                            console.error('Errore eliminazione chat:', error_2);
+                            alert('Errore nell\'eliminazione della chat');
+                            return [3 /*break*/, 4];
+                        case 4: return [2 /*return*/];
+                    }
+                });
+            }); }));
         }
         contextMenu.openMenu(e, options);
-    };
-    var handleOpenGroupModal = function (condizion) {
-        setOpenGroupModal(condizion);
-    };
-    var handleOpenFriendModal = function (condizion) {
-        setOpenFriendModal(condizion);
-    };
-    var addChat = function (chat) {
-        setChats(function (prevChats) { return __spreadArrays(prevChats, [chat]); });
     };
     react_1.useEffect(function () {
         var fetchChats = function () { return __awaiter(_this, void 0, void 0, function () {
@@ -156,7 +133,7 @@ function ChatList(_a) {
                         return [3 /*break*/, 3];
                     case 2:
                         error_3 = _a.sent();
-                        console.error('Errore nel caricamento delle chat:', error_3);
+                        console.error('Errore caricamento chat:', error_3);
                         return [3 /*break*/, 3];
                     case 3: return [2 /*return*/];
                 }
@@ -165,15 +142,19 @@ function ChatList(_a) {
         fetchChats();
     }, []);
     return (React.createElement("div", { className: chatList_module_css_1["default"]["chat-list"] },
-        openGroupModal && (React.createElement(ModalCreateGroup_1["default"], { onBtnClick: handleOpenGroupModal, addChats: addChat })),
-        openFriendModal && (React.createElement(ModalAddFriend_1["default"], { onAddFriendClick: handleOpenFriendModal, onChatCreated: addChat })),
-        React.createElement(ChatHeader_1["default"], { onBtnClick: handleOpenGroupModal, onAddFriendClick: handleOpenFriendModal }),
-        React.createElement("div", { className: chatList_module_css_1["default"]["chat-item-container"] }, chats && chats.map(function (chat) { return (React.createElement("div", { key: chat.id, className: chatList_module_css_1["default"]["chat-item"], onClick: function () { return onButtonClick(chat.id, chat.name, chat.participantIds); }, onContextMenu: function (e) { return handleChatContextMenu(e, chat); } },
+        openGroupModal && (React.createElement(ModalCreateGroup_1["default"], { onBtnClick: setOpenGroupModal, addChats: function (chat) { return setChats(function (prev) { return __spreadArrays(prev, [chat]); }); } })),
+        openFriendModal && (React.createElement(ModalAddFriend_1["default"], { onAddFriendClick: setOpenFriendModal, onChatCreated: function (chat) { return setChats(function (prev) { return __spreadArrays(prev, [chat]); }); } })),
+        manageMembersChat && (React.createElement(ModalManageMembers_1["default"], { chatId: manageMembersChat.id, chatName: manageMembersChat.name, currentMembers: manageMembersChat.participantIds, onClose: function () { return setManageMembersChat(null); }, onMembersUpdated: function () {
+                // Ricarica chat per aggiornare membri
+                services_1.ChatService.getUserChats().then(setChats);
+            } })),
+        React.createElement(ChatHeader_1["default"], { onBtnClick: setOpenGroupModal, onAddFriendClick: setOpenFriendModal }),
+        React.createElement("div", { className: chatList_module_css_1["default"]["chat-item-container"] }, chats.map(function (chat) { return (React.createElement("div", { key: chat.id, className: chatList_module_css_1["default"]["chat-item"], onClick: function () { return onButtonClick(chat.id, chat.name, chat.participantIds); }, onContextMenu: function (e) { return handleChatContextMenu(e, chat); } },
             React.createElement("div", { className: chatList_module_css_1["default"]["chat-info"] },
                 React.createElement("h1", { className: chatList_module_css_1["default"]["chat-name"] },
                     chat.name,
                     React.createElement("br", null),
-                    React.createElement("span", { className: chatList_module_css_1["default"]["chat-description"] }, "Descripsion: " + chat.description))))); })),
+                    React.createElement("span", { className: chatList_module_css_1["default"]["chat-description"] }, chat.description || 'Nessuna descrizione'))))); })),
         React.createElement(ContextMenu_1["default"], { isOpen: contextMenu.isOpen, position: contextMenu.position, options: contextMenu.options, onClose: contextMenu.closeMenu })));
 }
 exports["default"] = ChatList;

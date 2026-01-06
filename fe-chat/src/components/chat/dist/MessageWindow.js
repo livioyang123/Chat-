@@ -52,7 +52,6 @@ var messageInput_module_css_1 = require("@/styles/messageInput.module.css");
 var mediaModal_module_css_1 = require("@/styles/mediaModal.module.css");
 var useContextMenu_1 = require("@/hooks/useContextMenu");
 var ContextMenu_1 = require("@/components/ContextMenu");
-var io5_2 = require("react-icons/io5");
 var gsap_1 = require("gsap");
 var MAX_FILE_SIZE = 100 * 1024 * 1024;
 var ALLOWED_FILE_TYPES = [
@@ -121,37 +120,41 @@ function MessageWindow(_a) {
     var contextMenu = useContextMenu_1.useContextMenu();
     // Funzione per aprire menu su messaggio
     var handleMessageContextMenu = function (e, message) {
-        var options = [];
-        // Solo per messaggi propri
-        if (message.senderId === currentUserId) {
-            options.push({
-                label: 'Elimina messaggio',
-                icon: React.createElement(io5_2.IoTrash, null),
-                danger: true,
-                onClick: function () { return __awaiter(_this, void 0, void 0, function () {
-                    var error_1;
-                    return __generator(this, function (_a) {
-                        switch (_a.label) {
-                            case 0:
-                                _a.trys.push([0, 2, , 3]);
-                                return [4 /*yield*/, messageService_1.MessageService.deleteMessage(message.id || '')];
-                            case 1:
-                                _a.sent();
-                                setMessages(function (prev) { return prev.filter(function (m) { return m.id !== message.id; }); });
-                                return [3 /*break*/, 3];
-                            case 2:
-                                error_1 = _a.sent();
-                                console.error('Errore eliminazione messaggio:', error_1);
-                                return [3 /*break*/, 3];
-                            case 3: return [2 /*return*/];
-                        }
-                    });
-                }); }
-            });
-        }
-        if (options.length > 0) {
-            contextMenu.openMenu(e, options);
-        }
+        e.preventDefault();
+        e.stopPropagation();
+        // Solo messaggi propri possono essere eliminati
+        if (message.senderId !== currentUserId)
+            return;
+        var options = [
+            useContextMenu_1.ContextMenuActions.deleteMessage(function () { return __awaiter(_this, void 0, void 0, function () {
+                var error_1;
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0:
+                            if (!confirm('Eliminare questo messaggio?'))
+                                return [2 /*return*/];
+                            _a.label = 1;
+                        case 1:
+                            _a.trys.push([1, 3, , 4]);
+                            // Chiama il servizio con chatId e userId
+                            return [4 /*yield*/, messageService_1.MessageService.deleteMessage(message.id || '', chatId, currentUserId)];
+                        case 2:
+                            // Chiama il servizio con chatId e userId
+                            _a.sent();
+                            // Rimuovi localmente
+                            setMessages(function (prev) { return prev.filter(function (m) { return m.id !== message.id; }); });
+                            return [3 /*break*/, 4];
+                        case 3:
+                            error_1 = _a.sent();
+                            console.error('Errore eliminazione:', error_1);
+                            setError('Impossibile eliminare il messaggio');
+                            return [3 /*break*/, 4];
+                        case 4: return [2 /*return*/];
+                    }
+                });
+            }); })
+        ];
+        contextMenu.openMenu(e, options);
     };
     var scrollToBottom = function () {
         var _a;
@@ -439,15 +442,27 @@ function MessageWindow(_a) {
             React.createElement("div", { className: messageWindow_module_css_1["default"]["video-play-overlay"] }, "\u25B6")),
         message.content && (React.createElement("div", { className: messageWindow_module_css_1["default"]["message-caption"] }, message.content)))); };
     var renderMessageContent = function (message) {
+        // Gestisci messaggi eliminati
+        if (message.type === 'DELETED_MESSAGE') {
+            try {
+                var deletedInfo = JSON.parse(message.content || '{}');
+                return (React.createElement("div", { className: messageWindow_module_css_1["default"]["deleted-message"] },
+                    React.createElement("span", { className: messageWindow_module_css_1["default"]["deleted-icon"] }, "\uD83D\uDDD1\uFE0F"),
+                    React.createElement("span", { className: messageWindow_module_css_1["default"]["deleted-text"] },
+                        deletedInfo.deletedByUsername,
+                        " ha eliminato un messaggio")));
+            }
+            catch (_a) {
+                return React.createElement("div", { className: messageWindow_module_css_1["default"]["deleted-message"] }, "Messaggio eliminato");
+            }
+        }
         switch (message.type) {
             case 'IMAGE':
                 return renderImage(message);
             case 'VIDEO':
                 return renderVideo(message);
             default:
-                return React.createElement("div", { className: messageWindow_module_css_1["default"]["message-text"], onContextMenu: function (e) { return handleMessageContextMenu(e, message); } },
-                    message.content,
-                    React.createElement(ContextMenu_1["default"], { isOpen: contextMenu.isOpen, position: contextMenu.position, options: contextMenu.options, onClose: contextMenu.closeMenu }));
+                return (React.createElement("div", { className: messageWindow_module_css_1["default"]["message-text"], onContextMenu: function (e) { return handleMessageContextMenu(e, message); } }, message.content));
         }
     };
     var renderFilePreview = function () {
@@ -509,6 +524,7 @@ function MessageWindow(_a) {
         modalMedia && (React.createElement("div", { className: mediaModal_module_css_1["default"]["media-modal"], onClick: closeMediaModal },
             React.createElement("div", { className: mediaModal_module_css_1["default"]["modal-close"] },
                 React.createElement(io5_1.IoClose, null)),
-            React.createElement("div", { className: mediaModal_module_css_1["default"]["modal-content"], onClick: function (e) { return e.stopPropagation(); } }, modalMedia.type === 'image' ? (React.createElement("img", { src: modalMedia.url, alt: "Immagine full screen", className: mediaModal_module_css_1["default"]["modal-image"] })) : (React.createElement("video", { src: modalMedia.url, controls: true, autoPlay: true, className: mediaModal_module_css_1["default"]["modal-video"] }, "Il tuo browser non supporta i video.")))))));
+            React.createElement("div", { className: mediaModal_module_css_1["default"]["modal-content"], onClick: function (e) { return e.stopPropagation(); } }, modalMedia.type === 'image' ? (React.createElement("img", { src: modalMedia.url, alt: "Immagine full screen", className: mediaModal_module_css_1["default"]["modal-image"] })) : (React.createElement("video", { src: modalMedia.url, controls: true, autoPlay: true, className: mediaModal_module_css_1["default"]["modal-video"] }, "Il tuo browser non supporta i video."))))),
+        React.createElement(ContextMenu_1["default"], { isOpen: contextMenu.isOpen, position: contextMenu.position, options: contextMenu.options, onClose: contextMenu.closeMenu })));
 }
 exports["default"] = MessageWindow;

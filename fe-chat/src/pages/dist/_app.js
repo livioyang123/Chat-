@@ -11,12 +11,15 @@ var __assign = (this && this.__assign) || function () {
     return __assign.apply(this, arguments);
 };
 exports.__esModule = true;
-// src/pages/_app.tsx
+// fe-chat/src/pages/_app.tsx - AGGIORNATO
 require("@/styles/global.css");
+require("@/styles/animations/animations.css"); // ✨ Importa animazioni globali
 var ErrorBoundary_1 = require("@/components/ErrorBoundary");
+var GlobalAnimationsProvider_1 = require("@/components/GlobalAnimationsProvider");
 function MyApp(_a) {
     var Component = _a.Component, pageProps = _a.pageProps;
     return (React.createElement(ErrorBoundary_1["default"], null,
-        React.createElement(Component, __assign({}, pageProps))));
+        React.createElement(GlobalAnimationsProvider_1["default"], null,
+            React.createElement(Component, __assign({}, pageProps)))));
 }
 exports["default"] = MyApp;

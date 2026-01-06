@@ -7,9 +7,9 @@ import messageStyle from "@/styles/messageWindow.module.css";
 import inputStyle from "@/styles/messageInput.module.css";
 import modalStyle from "@/styles/mediaModal.module.css";
 
-import { useContextMenu } from '@/hooks/useContextMenu';
+import { ContextMenuActions, useContextMenu } from '@/hooks/useContextMenu';
 import ContextMenu from '@/components/ContextMenu';
-import { IoTrash } from 'react-icons/io5';
+
 
 import { gsap } from 'gsap';
 
@@ -97,28 +97,30 @@ export default function MessageWindow({ chatId, chatName, currentUserId, chatPar
 
   // Funzione per aprire menu su messaggio
   const handleMessageContextMenu = (e: React.MouseEvent, message: ChatMessage) => {
-    const options = [];
+    e.preventDefault();
+    e.stopPropagation();
 
-    // Solo per messaggi propri
-    if (message.senderId === currentUserId) {
-      options.push({
-        label: 'Elimina messaggio',
-        icon: <IoTrash />,
-        danger: true,
-        onClick: async () => {
-          try {
-            await MessageService.deleteMessage(message.id || '');
-            setMessages(prev => prev.filter(m => m.id !== message.id));
-          } catch (error) {
-            console.error('Errore eliminazione messaggio:', error);
-          }
+    // Solo messaggi propri possono essere eliminati
+    if (message.senderId !== currentUserId) return;
+
+    const options = [
+      ContextMenuActions.deleteMessage(async () => {
+        if (!confirm('Eliminare questo messaggio?')) return;
+        
+        try {
+          // Chiama il servizio con chatId e userId
+          await MessageService.deleteMessage(message.id || '', chatId, currentUserId);
+          
+          // Rimuovi localmente
+          setMessages(prev => prev.filter(m => m.id !== message.id));
+        } catch (error) {
+          console.error('Errore eliminazione:', error);
+          setError('Impossibile eliminare il messaggio');
         }
-      });
-    }
+      })
+    ];
 
-    if (options.length > 0) {
-      contextMenu.openMenu(e, options);
-    }
+    contextMenu.openMenu(e, options);
   };
 
   const scrollToBottom = () => {
@@ -434,22 +436,37 @@ export default function MessageWindow({ chatId, chatName, currentUserId, chatPar
   );
 
   const renderMessageContent = (message: ChatMessage) => {
+    // Gestisci messaggi eliminati
+    if (message.type === 'DELETED_MESSAGE') {
+      try {
+        const deletedInfo = JSON.parse(message.content || '{}');
+        return (
+          <div className={messageStyle["deleted-message"]}>
+            <span className={messageStyle["deleted-icon"]}>🗑️</span>
+            <span className={messageStyle["deleted-text"]}>
+              {deletedInfo.deletedByUsername} ha eliminato un messaggio
+            </span>
+          </div>
+        );
+      } catch {
+        return <div className={messageStyle["deleted-message"]}>Messaggio eliminato</div>;
+      }
+    }
+
     switch (message.type) {
       case 'IMAGE':
         return renderImage(message);
       case 'VIDEO':
         return renderVideo(message);
       default:
-        return <div className={messageStyle["message-text"]}
-                onContextMenu={(e) => handleMessageContextMenu(e, message)}>
-                  {message.content}
-                  <ContextMenu
-                    isOpen={contextMenu.isOpen}
-                    position={contextMenu.position}
-                    options={contextMenu.options}
-                    onClose={contextMenu.closeMenu}
-                  />
-                </div>;   
+        return (
+          <div 
+            className={messageStyle["message-text"]}
+            onContextMenu={(e) => handleMessageContextMenu(e, message)}
+          >
+            {message.content}
+          </div>
+        );   
     }
   };
 
@@ -650,6 +667,13 @@ export default function MessageWindow({ chatId, chatName, currentUserId, chatPar
           </div>
         </div>
       )}
+
+      <ContextMenu
+        isOpen={contextMenu.isOpen}
+        position={contextMenu.position}
+        options={contextMenu.options}
+        onClose={contextMenu.closeMenu}
+      />
     </div>
   );
 }

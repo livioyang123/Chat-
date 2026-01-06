@@ -1,4 +1,4 @@
-// MODIFICA COMPLETA: fe-chat/src/components/LoadingScreen.tsx
+// fe-chat/src/components/LoadingScreen.tsx - VERSIONE CORRETTA
 'use client';
 import { useEffect, useState, useRef } from 'react';
 import { gsap } from 'gsap';
@@ -13,17 +13,17 @@ interface LoadingScreenProps {
 export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
   const [progress, setProgress] = useState(0);
   const isLoadingRef = useRef(false);
+  const hasLoadedRef = useRef(false); // ✨ Previene reload
   const gridRef = useRef<HTMLDivElement>(null);
   const sparkContainerRef = useRef<HTMLDivElement>(null);
 
-  // ✨ Animazione Grid Scan
+  // Grid Scan Animation
   useEffect(() => {
     if (!gridRef.current) return;
 
     const grid = gridRef.current;
     const cells = grid.querySelectorAll(`.${styles.gridCell}`);
 
-    // Animazione scan continua
     gsap.to(cells, {
       opacity: 0.8,
       scale: 1.05,
@@ -37,19 +37,18 @@ export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
       ease: 'power2.inOut'
     });
 
-    // Scan line orizzontale
     const scanLine = grid.querySelector(`.${styles.scanLine}`);
     if (scanLine) {
       gsap.to(scanLine, {
         y: '100vh',
-        duration: 2,
+        duration: 1.5,
         repeat: -1,
         ease: 'none'
       });
     }
   }, []);
 
-  // ✨ Click Spark Effect
+  // Click Spark Effect
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
       if (!sparkContainerRef.current) return;
@@ -61,18 +60,14 @@ export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
       
       sparkContainerRef.current.appendChild(spark);
 
-      // Animazione con GSAP
       gsap.to(spark, {
         scale: 2,
         opacity: 0,
         duration: 0.6,
         ease: 'power2.out',
-        onComplete: () => {
-          spark.remove();
-        }
+        onComplete: () => spark.remove()
       });
 
-      // Spark particles
       for (let i = 0; i < 6; i++) {
         const particle = document.createElement('div');
         particle.className = styles.sparkParticle;
@@ -93,9 +88,7 @@ export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
           scale: 0,
           duration: 0.8,
           ease: 'power2.out',
-          onComplete: () => {
-            particle.remove();
-          }
+          onComplete: () => particle.remove()
         });
       }
     };
@@ -104,45 +97,66 @@ export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
     return () => document.removeEventListener('click', handleClick);
   }, []);
 
-  // Preload data (mantieni logica originale)
+  // ✨ FIX: Preload con controllo duplicazioni
   useEffect(() => {
-    if (isLoadingRef.current) return;
+    // Previeni multiple esecuzioni
+    if (isLoadingRef.current || hasLoadedRef.current) return;
+    
     isLoadingRef.current = true;
+    hasLoadedRef.current = true;
 
     const preloadData = async () => {
       try {
+        console.log('🚀 Starting preload...');
         setProgress(10);
-        await MessageService.initializeWebSocket();
-        setProgress(40);
 
+        // Step 1: WebSocket
         try {
-          await ChatService.getUserChats();
-        } catch (chatError) {
-          console.warn('No chats found (new user):', chatError);
+          await MessageService.initializeWebSocket();
+          console.log('✅ WebSocket initialized');
+          setProgress(40);
+        } catch (error) {
+          console.warn('⚠️ WebSocket init failed:', error);
+          setProgress(40);
         }
-        setProgress(90);
 
+        // Step 2: Chats (singola chiamata)
+        try {
+          const chats = await ChatService.getUserChats();
+          console.log('✅ Chats loaded:', chats.length);
+          setProgress(90);
+        } catch (error) {
+          console.warn('⚠️ No chats found (new user or error):', error);
+          setProgress(90);
+        }
+
+        // Completa
         setProgress(100);
-        setTimeout(() => onComplete(), 100);
+        console.log('✅ Preload complete');
+        
+        setTimeout(() => {
+          onComplete();
+        }, 500);
 
       } catch (error) {
-        console.error('Critical error during preload:', error);
+        console.error('❌ Critical error during preload:', error);
         setProgress(100);
-        setTimeout(() => onComplete(), 200);
+        setTimeout(() => onComplete(), 500);
+      } finally {
+        isLoadingRef.current = false;
       }
     };
 
     preloadData();
 
-    return () => { 
-      isLoadingRef.current = false; 
+    // Cleanup: reset refs solo al unmount completo
+    return () => {
+      // Non resettare hasLoadedRef qui per evitare ricaricamenti
     };
-
   }, [onComplete]);
 
   return (
     <div className={styles.loadingContainer}>
-      {/* Grid Scan Background */}
       <div ref={gridRef} className={styles.gridBackground}>
         {Array.from({ length: 100 }).map((_, i) => (
           <div key={i} className={styles.gridCell} />
@@ -150,10 +164,8 @@ export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
         <div className={styles.scanLine} />
       </div>
 
-      {/* Click Spark Container */}
       <div ref={sparkContainerRef} className={styles.sparkContainer} />
 
-      {/* Content */}
       <div className={styles.content}>
         <h1 className={styles.title}>Loading</h1>
         

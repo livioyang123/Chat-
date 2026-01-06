@@ -1,13 +1,16 @@
 package com.chat.demo.controller;
 
+import com.chat.demo.data.dto.ErrorResponse;
 import com.chat.demo.data.entity.Chatroom;
 import com.chat.demo.data.service.ChatroomService;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import java.util.Map;
+import java.util.Optional;
 
 
 @RestController
@@ -65,6 +68,55 @@ public class ChatroomController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @PostMapping("/{id}/leave")
+    public ResponseEntity<?> leaveGroup(
+            @PathVariable String id,
+            @RequestBody Map<String, String> request) {
+        try {
+            String userId = request.get("userId");
+            
+            if (userId == null || userId.trim().isEmpty()) {
+                return ResponseEntity.badRequest()
+                    .body(new ErrorResponse("User ID richiesto"));
+            }
+            
+            Optional<Chatroom> chatroomOpt = chatroomService.getRoomById(id);
+            if (chatroomOpt.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+            
+            Chatroom chatroom = chatroomOpt.get();
+            
+            // Verifica che l'utente sia nel gruppo
+            if (!chatroom.getParticipantIds().contains(userId)) {
+                return ResponseEntity.badRequest()
+                    .body(new ErrorResponse("Utente non nel gruppo"));
+            }
+            
+            // Rimuovi utente
+            chatroom.getParticipantIds().remove(userId);
+            
+            // Se non ci sono più membri, elimina il gruppo
+            if (chatroom.getParticipantIds().isEmpty()) {
+                chatroomService.deleteRoomById(id);
+                return ResponseEntity.ok(Map.of(
+                    "message", "Gruppo eliminato (nessun membro rimasto)"
+                ));
+            }
+            
+            // Salva modifiche
+            chatroomService.createRoom(chatroom);
+            
+            return ResponseEntity.ok(Map.of(
+                "message", "Utente rimosso dal gruppo con successo",
+                "chatroom", chatroom
+            ));
+            
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ErrorResponse("Errore: " + e.getMessage()));
+        }
+    }
     
 
     

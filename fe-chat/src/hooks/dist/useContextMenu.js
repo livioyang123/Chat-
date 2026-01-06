@@ -1,88 +1,102 @@
 "use strict";
 exports.__esModule = true;
-exports.useContextMenu = void 0;
-// NUOVO FILE: fe-chat/src/hooks/useContextMenu.ts
+exports.ContextMenuActions = exports.useContextMenu = void 0;
+// fe-chat/src/hooks/useContextMenu.ts - VERSIONE CORRETTA
 var react_1 = require("react");
 function useContextMenu() {
     var _a = react_1.useState(false), isOpen = _a[0], setIsOpen = _a[1];
     var _b = react_1.useState({ x: 0, y: 0 }), position = _b[0], setPosition = _b[1];
     var _c = react_1.useState([]), options = _c[0], setOptions = _c[1];
-    var menuRef = react_1.useRef(null);
-    // ✨ Calcola posizione ottimale del menu
-    var calculatePosition = react_1.useCallback(function (e) {
-        var menuWidth = 200; // Larghezza menu approssimativa
-        var menuHeight = 40 * options.length; // Altezza basata su numero opzioni
-        var viewportWidth = window.innerWidth;
-        var viewportHeight = window.innerHeight;
-        var x = e.clientX;
-        var y = e.clientY;
-        // Se menu esce a destra, spostalo a sinistra
-        if (x + menuWidth > viewportWidth) {
-            x = e.clientX - menuWidth;
-        }
-        // Se menu esce in basso, spostalo sopra
-        if (y + menuHeight > viewportHeight) {
-            y = e.clientY - menuHeight;
-        }
-        // Assicura che non esca mai dal viewport
-        x = Math.max(10, Math.min(x, viewportWidth - menuWidth - 10));
-        y = Math.max(10, Math.min(y, viewportHeight - menuHeight - 10));
-        return { x: x, y: y };
-    }, [options.length]);
     var openMenu = react_1.useCallback(function (e, menuOptions) {
         e.preventDefault();
         e.stopPropagation();
+        var MENU_WIDTH = 200;
+        var MENU_HEIGHT = menuOptions.length * 44 + 12;
+        var CURSOR_OFFSET = 2; // Offset minimo dal cursore
+        // ✨ FIX: Posizione esatta del mouse
+        var mouseX = e.clientX;
+        var mouseY = e.clientY;
+        var x = mouseX;
+        var y = mouseY;
+        // ✨ CORREZIONE: Controlla spazio disponibile a destra
+        var spaceRight = window.innerWidth - mouseX;
+        var spaceBottom = window.innerHeight - mouseY;
+        // Se non c'è spazio a destra, mostra a SINISTRA del cursore
+        if (spaceRight < MENU_WIDTH + 10) {
+            x = mouseX - MENU_WIDTH - CURSOR_OFFSET;
+        }
+        else {
+            x = mouseX + CURSOR_OFFSET;
+        }
+        // Se non c'è spazio sotto, mostra SOPRA il cursore
+        if (spaceBottom < MENU_HEIGHT + 10) {
+            y = mouseY - MENU_HEIGHT - CURSOR_OFFSET;
+        }
+        else {
+            y = mouseY + CURSOR_OFFSET;
+        }
+        // Assicura che non esca mai dallo schermo
+        x = Math.max(10, Math.min(x, window.innerWidth - MENU_WIDTH - 10));
+        y = Math.max(10, Math.min(y, window.innerHeight - MENU_HEIGHT - 10));
+        setPosition({ x: x, y: y });
         setOptions(menuOptions);
-        // Calcola posizione dopo aver impostato le opzioni
-        setTimeout(function () {
-            var pos = calculatePosition(e);
-            setPosition(pos);
-            setIsOpen(true);
-        }, 0);
-    }, [calculatePosition]);
+        setIsOpen(true);
+    }, []);
     var closeMenu = react_1.useCallback(function () {
         setIsOpen(false);
     }, []);
-    // Chiudi menu al click fuori
+    // Chiudi al click fuori
     react_1.useEffect(function () {
+        if (!isOpen)
+            return;
         var handleClickOutside = function (event) {
-            if (menuRef.current && !menuRef.current.contains(event.target)) {
+            var target = event.target;
+            if (!target.closest('[role="menu"]')) {
                 closeMenu();
             }
         };
-        var handleScroll = function () {
-            closeMenu();
+        var handleScroll = function () { return closeMenu(); };
+        var handleEscape = function (e) {
+            if (e.key === 'Escape')
+                closeMenu();
         };
-        if (isOpen) {
+        setTimeout(function () {
             document.addEventListener('mousedown', handleClickOutside);
             document.addEventListener('scroll', handleScroll, true);
-            // Disabilita il context menu di default del browser
-            document.addEventListener('contextmenu', function (e) { return e.preventDefault(); });
-            return function () {
-                document.removeEventListener('mousedown', handleClickOutside);
-                document.removeEventListener('scroll', handleScroll, true);
-                document.removeEventListener('contextmenu', function (e) { return e.preventDefault(); });
-            };
-        }
-    }, [isOpen, closeMenu]);
-    // Chiudi con ESC
-    react_1.useEffect(function () {
-        var handleEscape = function (e) {
-            if (e.key === 'Escape') {
-                closeMenu();
-            }
-        };
-        if (isOpen) {
             document.addEventListener('keydown', handleEscape);
-            return function () { return document.removeEventListener('keydown', handleEscape); };
-        }
+        }, 100);
+        return function () {
+            document.removeEventListener('mousedown', handleClickOutside);
+            document.removeEventListener('scroll', handleScroll, true);
+            document.removeEventListener('keydown', handleEscape);
+        };
     }, [isOpen, closeMenu]);
-    return {
-        isOpen: isOpen,
-        position: position,
-        options: options,
-        openMenu: openMenu,
-        closeMenu: closeMenu
-    };
+    return { isOpen: isOpen, position: position, options: options, openMenu: openMenu, closeMenu: closeMenu };
 }
 exports.useContextMenu = useContextMenu;
+// ✨ Factory per opzioni comuni
+exports.ContextMenuActions = {
+    manageMembers: function (onManage) { return ({
+        label: 'Gestisci membri',
+        icon: '👥',
+        onClick: onManage
+    }); },
+    leaveGroup: function (chatName, onLeave) { return ({
+        label: 'Abbandona gruppo',
+        icon: '🚪',
+        danger: true,
+        onClick: onLeave
+    }); },
+    deleteChat: function (chatName, onDelete) { return ({
+        label: 'Elimina chat',
+        icon: '🗑️',
+        danger: true,
+        onClick: onDelete
+    }); },
+    deleteMessage: function (onDelete) { return ({
+        label: 'Elimina messaggio',
+        icon: '🗑️',
+        danger: true,
+        onClick: onDelete
+    }); }
+};

@@ -1,4 +1,4 @@
-/* MODIFICA COMPLETA: fe-chat/src/styles/loading.module.css */
+/* fe-chat/src/styles/loading.module.css */
 
 .loadingContainer {
   position: fixed;
@@ -6,7 +6,7 @@
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  background: linear-gradient(135deg, #f8f5f0 0%, #e9dfc8 100%);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -26,14 +26,15 @@
   grid-template-columns: repeat(10, 1fr);
   grid-template-rows: repeat(10, 1fr);
   gap: 2px;
-  opacity: 0.3;
+  opacity: 0.35;
   z-index: 1;
 }
 
 .gridCell {
-  background: linear-gradient(135deg, #0f3460 0%, #16213e 100%);
-  border: 1px solid rgba(101, 197, 219, 0.1);
-  opacity: 0.3;
+  background: linear-gradient(135deg, #f1e7c6 0%, #e6d9a2 100%);
+  border: 1px solid rgba(156, 122, 68, 0.25);
+  opacity: 0.25;
+  transition: all 0.3s ease;
 }
 
 .scanLine {
@@ -41,17 +42,19 @@
   top: 0;
   left: 0;
   width: 100%;
-  height: 3px;
-  background: linear-gradient(90deg, 
-    transparent 0%, 
-    rgba(101, 197, 219, 0.8) 50%, 
+  height: 4px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(193, 163, 106, 0.8) 50%,
     transparent 100%
   );
-  box-shadow: 0 0 20px rgba(101, 197, 219, 0.6);
+  box-shadow:
+    0 0 20px rgba(193, 163, 106, 0.6);
   z-index: 2;
 }
 
-/* ✨ Click Spark Effect */
+/* Click Spark Effect */
 .sparkContainer {
   position: fixed;
   top: 0;
@@ -64,22 +67,22 @@
 
 .clickSpark {
   position: absolute;
-  width: 20px;
-  height: 20px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
-  background: radial-gradient(circle, #65c5db 0%, transparent 70%);
-  box-shadow: 0 0 20px #65c5db;
+  background: radial-gradient(circle, #f1e7c6 0%, transparent 70%);
+  box-shadow: 0 0 30px rgba(193, 163, 106, 0.6);
   transform: translate(-50%, -50%);
   pointer-events: none;
 }
 
 .sparkParticle {
   position: absolute;
-  width: 4px;
-  height: 4px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
-  background: #65c5db;
-  box-shadow: 0 0 10px #65c5db;
+  background: #e6d9a2;
+  box-shadow: 0 0 15px rgba(193, 163, 106, 0.6);
   transform: translate(-50%, -50%);
   pointer-events: none;
 }
@@ -92,32 +95,59 @@
 }
 
 .title {
-  font-size: 48px;
-  font-weight: 700;
-  color: #65c5db;
-  text-shadow: 0 0 20px rgba(101, 197, 219, 0.5);
+  font-size: 56px;
+  font-weight: 800;
+  background: linear-gradient(
+    135deg,
+    #6b4f2a 0%,
+    #9c7a44 50%,
+    #c1a36a 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 0 25px rgba(156, 122, 68, 0.4);
   margin-bottom: 40px;
-  letter-spacing: 4px;
+  letter-spacing: 6px;
+  animation: titlePulse 2s ease-in-out infinite;
+}
+
+@keyframes titlePulse {
+  0%, 100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.15);
+  }
 }
 
 .progressBar {
-  width: 300px;
-  height: 20px;
-  background-color: rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
+  width: 350px;
+  height: 24px;
+  background-color: rgba(248, 245, 240, 0.8);
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(101, 197, 219, 0.3);
+  box-shadow:
+    inset 0 2px 6px rgba(0, 0, 0, 0.2),
+    0 0 15px rgba(193, 163, 106, 0.3);
+  border: 2px solid rgba(156, 122, 68, 0.35);
 }
 
 .progressFill {
   height: 100%;
-  background: linear-gradient(90deg, #0f3460 0%, #65c5db 50%, #0f3460 100%);
+  background: linear-gradient(
+    90deg,
+    #9c7a44 0%,
+    #c1a36a 50%,
+    #9c7a44 100%
+  );
   background-size: 200% 100%;
   animation: progressShimmer 2s linear infinite;
-  transition: width 0.5s ease;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(101, 197, 219, 0.4);
+  box-shadow:
+    0 0 15px rgba(193, 163, 106, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
 @keyframes progressShimmer {
@@ -126,9 +156,10 @@
 }
 
 .progressText {
-  margin-top: 15px;
-  font-size: 18px;
-  color: #65c5db;
-  font-weight: 600;
-  text-shadow: 0 0 10px rgba(101, 197, 219, 0.3);
+  margin-top: 20px;
+  font-size: 20px;
+  color: #6b4f2a;
+  font-weight: 700;
+  text-shadow: 0 0 10px rgba(193, 163, 106, 0.4);
+  letter-spacing: 2px;
 }
