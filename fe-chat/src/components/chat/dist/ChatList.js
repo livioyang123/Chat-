@@ -1,4 +1,15 @@
 "use strict";
+var __assign = (this && this.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -43,7 +54,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
     return r;
 };
 exports.__esModule = true;
-// fe-chat/src/components/chat/ChatList.tsx - AGGIORNATO
+// fe-chat/src/components/chat/ChatList.tsx - FIX REFRESH MEMBRI
 var services_1 = require("@/services");
 var react_1 = require("react");
 var ModalCreateGroup_1 = require("./ModalCreateGroup");
@@ -69,25 +80,28 @@ function ChatList(_a) {
             options.push(useContextMenu_1.ContextMenuActions.manageMembers(function () {
                 setManageMembersChat(chat);
             }), useContextMenu_1.ContextMenuActions.leaveGroup(chat.name, function () { return __awaiter(_this, void 0, void 0, function () {
-                var error_1;
+                var updatedChats, error_1;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
                         case 0:
-                            if (!confirm("Vuoi abbandonare " + chat.name + "?")) return [3 /*break*/, 4];
+                            if (!confirm("Vuoi abbandonare " + chat.name + "?")) return [3 /*break*/, 5];
                             _a.label = 1;
                         case 1:
-                            _a.trys.push([1, 3, , 4]);
+                            _a.trys.push([1, 4, , 5]);
                             return [4 /*yield*/, services_1.ChatService.leaveChat(chat.id)];
                         case 2:
                             _a.sent();
-                            setChats(function (prev) { return prev.filter(function (c) { return c.id !== chat.id; }); });
-                            return [3 /*break*/, 4];
+                            return [4 /*yield*/, services_1.ChatService.getUserChats()];
                         case 3:
+                            updatedChats = _a.sent();
+                            setChats(updatedChats);
+                            return [3 /*break*/, 5];
+                        case 4:
                             error_1 = _a.sent();
                             console.error('Errore abbandono gruppo:', error_1);
                             alert('Errore nell\'abbandono del gruppo');
-                            return [3 /*break*/, 4];
-                        case 4: return [2 /*return*/];
+                            return [3 /*break*/, 5];
+                        case 5: return [2 /*return*/];
                     }
                 });
             }); }));
@@ -141,13 +155,39 @@ function ChatList(_a) {
         }); };
         fetchChats();
     }, []);
+    // ✅ FIX: Handler per aggiornamento membri
+    var handleMembersUpdated = function (newMembers) { return __awaiter(_this, void 0, void 0, function () {
+        var updatedChats, error_4;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    _a.trys.push([0, 2, , 3]);
+                    // Aggiorna solo la chat specifica
+                    if (manageMembersChat) {
+                        setChats(function (prevChats) {
+                            return prevChats.map(function (chat) {
+                                return chat.id === manageMembersChat.id
+                                    ? __assign(__assign({}, chat), { participantIds: newMembers }) : chat;
+                            });
+                        });
+                    }
+                    return [4 /*yield*/, services_1.ChatService.getUserChats()];
+                case 1:
+                    updatedChats = _a.sent();
+                    setChats(updatedChats);
+                    return [3 /*break*/, 3];
+                case 2:
+                    error_4 = _a.sent();
+                    console.error('Error refreshing chats:', error_4);
+                    return [3 /*break*/, 3];
+                case 3: return [2 /*return*/];
+            }
+        });
+    }); };
     return (React.createElement("div", { className: chatList_module_css_1["default"]["chat-list"] },
         openGroupModal && (React.createElement(ModalCreateGroup_1["default"], { onBtnClick: setOpenGroupModal, addChats: function (chat) { return setChats(function (prev) { return __spreadArrays(prev, [chat]); }); } })),
         openFriendModal && (React.createElement(ModalAddFriend_1["default"], { onAddFriendClick: setOpenFriendModal, onChatCreated: function (chat) { return setChats(function (prev) { return __spreadArrays(prev, [chat]); }); } })),
-        manageMembersChat && (React.createElement(ModalManageMembers_1["default"], { chatId: manageMembersChat.id, chatName: manageMembersChat.name, currentMembers: manageMembersChat.participantIds, onClose: function () { return setManageMembersChat(null); }, onMembersUpdated: function () {
-                // Ricarica chat per aggiornare membri
-                services_1.ChatService.getUserChats().then(setChats);
-            } })),
+        manageMembersChat && (React.createElement(ModalManageMembers_1["default"], { chatId: manageMembersChat.id, chatName: manageMembersChat.name, currentMembers: manageMembersChat.participantIds, onClose: function () { return setManageMembersChat(null); }, onMembersUpdated: handleMembersUpdated })),
         React.createElement(ChatHeader_1["default"], { onBtnClick: setOpenGroupModal, onAddFriendClick: setOpenFriendModal }),
         React.createElement("div", { className: chatList_module_css_1["default"]["chat-item-container"] }, chats.map(function (chat) { return (React.createElement("div", { key: chat.id, className: chatList_module_css_1["default"]["chat-item"], onClick: function () { return onButtonClick(chat.id, chat.name, chat.participantIds); }, onContextMenu: function (e) { return handleChatContextMenu(e, chat); } },
             React.createElement("div", { className: chatList_module_css_1["default"]["chat-info"] },

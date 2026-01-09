@@ -1,176 +1,55 @@
-/* fe-chat/src/styles/theme.css - NUOVO FILE CENTRALIZZATO */
+/* fe-chat/src/styles/theme.css - NUOVO FILE */
 
 /* ========================================
-   CSS VARIABLES - TEMA BASE
+   THEME SYSTEM
    ======================================== */
 
 :root {
-  /* Colors - Primary */
-  --color-primary: #6366f1;
-  --color-primary-light: #818cf8;
-  --color-primary-dark: #4f46e5;
-  
-  /* Colors - Secondary */
-  --color-secondary: #8b5cf6;
-  --color-secondary-light: #a78bfa;
-  --color-secondary-dark: #7c3aed;
-  
-  /* Colors - Accent */
-  --color-accent: #ec4899;
-  --color-success: #10b981;
-  --color-warning: #f59e0b;
-  --color-danger: #ef4444;
-  
-  /* Colors - Neutrals */
+  /* Light Theme (Default) */
   --color-bg-primary: #ffffff;
   --color-bg-secondary: #f9fafb;
   --color-bg-tertiary: #f3f4f6;
+  
   --color-text-primary: #1f2937;
   --color-text-secondary: #6b7280;
-  --color-text-tertiary: #9ca3af;
+  
   --color-border: #e5e7eb;
+  --color-primary: #6366f1;
+  --color-secondary: #8b5cf6;
+  --color-danger: #ef4444;
+  
+  --gradient-primary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
   
   /* Shadows */
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
   --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
-  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.15);
-  
-  /* Border Radius */
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 20px;
-  --radius-full: 9999px;
-  
-  /* Spacing */
-  --spacing-xs: 4px;
-  --spacing-sm: 8px;
-  --spacing-md: 16px;
-  --spacing-lg: 24px;
-  --spacing-xl: 32px;
-  
-  /* Transitions */
-  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-base: 300ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
-  
-  /* Gradients */
-  --gradient-primary: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
-  --gradient-accent: linear-gradient(135deg, var(--color-accent) 0%, var(--color-secondary) 100%);
-  
-  /* Background Images */
-  --bg-pattern: url('../assets/bg.png');
 }
 
-/* ========================================
-   DARK THEME
-   ======================================== */
-
-[data-theme="dark"] {
+/* Dark Theme */
+[data-theme='dark'] {
   --color-bg-primary: #1f2937;
   --color-bg-secondary: #111827;
   --color-bg-tertiary: #374151;
+  
   --color-text-primary: #f9fafb;
   --color-text-secondary: #d1d5db;
-  --color-text-tertiary: #9ca3af;
+  
   --color-border: #374151;
+  --color-primary: #818cf8;
+  --color-secondary: #a78bfa;
   
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.5);
-  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.6);
-  
-  --bg-pattern: url('../assets/dark.png');
+  --gradient-primary: linear-gradient(135deg, #818cf8 0%, #a78bfa 100%);
 }
 
-/* ========================================
-   CUSTOM THEME (dall'utente)
-   ======================================== */
-
-[data-theme="custom"] {
-  /* Questi saranno sovrascritti dinamicamente */
+/* Custom Theme */
+[data-theme='custom'] {
   --color-primary: var(--custom-primary, #6366f1);
   --color-secondary: var(--custom-secondary, #8b5cf6);
-  --gradient-primary: var(--custom-gradient, linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%));
+  --gradient-primary: var(--custom-gradient, linear-gradient(135deg, var(--custom-primary) 0%, var(--custom-secondary) 100%));
 }
 
-/* ========================================
-   UTILITY CLASSES
-   ======================================== */
-
-.bg-primary { background-color: var(--color-bg-primary); }
-.bg-secondary { background-color: var(--color-bg-secondary); }
-.text-primary { color: var(--color-text-primary); }
-.text-secondary { color: var(--color-text-secondary); }
-
-.shadow-sm { box-shadow: var(--shadow-sm); }
-.shadow-md { box-shadow: var(--shadow-md); }
-.shadow-lg { box-shadow: var(--shadow-lg); }
-
-.rounded-sm { border-radius: var(--radius-sm); }
-.rounded-md { border-radius: var(--radius-md); }
-.rounded-lg { border-radius: var(--radius-lg); }
-
-.transition { transition: all var(--transition-base); }
-.transition-fast { transition: all var(--transition-fast); }
-
-.gradient-primary { background: var(--gradient-primary); }
-.gradient-accent { background: var(--gradient-accent); }
-
-/* ========================================
-   GLOBAL RESETS & BASE STYLES
-   ======================================== */
-
+/* Smooth transitions per cambio tema */
 * {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-  background: rgba(0, 0, 0, 0.7) var(--bg-pattern);
-  background-size: cover;
-  background-attachment: fixed;
-  color: var(--color-text-primary);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  transition: background var(--transition-slow), color var(--transition-slow);
-}
-
-button {
-  font-family: inherit;
-  cursor: pointer;
-  transition: all var(--transition-base);
-}
-
-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.5;
-}
-
-input, textarea {
-  font-family: inherit;
-  transition: all var(--transition-base);
-}
-
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: var(--color-bg-secondary);
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--color-border);
-  border-radius: var(--radius-full);
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--color-text-tertiary);
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }

@@ -1,4 +1,4 @@
-
+// fe-chat/src/components/chat/ModalManageMembers.tsx - FIX COMPLETO
 import { useState, useEffect } from 'react';
 import { IoClose, IoAdd, IoRemove } from 'react-icons/io5';
 import { UserService, ChatService } from '@/services';
@@ -10,7 +10,7 @@ interface ModalManageMembersProps {
   chatName: string;
   currentMembers: string[];
   onClose: () => void;
-  onMembersUpdated: () => void;
+  onMembersUpdated: (newMembers: string[]) => void; // ✅ Passa i nuovi membri
 }
 
 export default function ModalManageMembers({
@@ -24,6 +24,7 @@ export default function ModalManageMembers({
   const [friends, setFriends] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [updating, setUpdating] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -54,41 +55,63 @@ export default function ModalManageMembers({
     loadData();
   }, [currentMembers]);
 
+  // ✅ FIX: Aggiungi membro con aggiornamento stato
   const handleAddMember = async (userId: string) => {
+    if (updating) return;
+    
     try {
+      setUpdating(true);
+      
+      // Chiama API backend
       await ChatService.addParticipant(chatId, userId);
       
       // Aggiorna liste locali
       const addedFriend = friends.find(f => f.id === userId);
       if (addedFriend) {
-        setMembers(prev => [...prev, addedFriend]);
+        const newMembers = [...members, addedFriend];
+        setMembers(newMembers);
         setFriends(prev => prev.filter(f => f.id !== userId));
+        
+        // ✅ Notifica al parent per refresh
+        onMembersUpdated(newMembers.map(m => m.id));
       }
       
-      onMembersUpdated();
     } catch (error) {
       console.error('Error adding member:', error);
       alert('Errore nell\'aggiunta del membro');
+    } finally {
+      setUpdating(false);
     }
   };
 
+  // ✅ FIX: Rimuovi membro con aggiornamento stato
   const handleRemoveMember = async (userId: string) => {
+    if (updating) return;
+    
     if (!confirm('Rimuovere questo membro dal gruppo?')) return;
 
     try {
+      setUpdating(true);
+      
+      // Chiama API backend
       await ChatService.removeParticipant(chatId, userId);
       
       // Aggiorna liste locali
       const removedMember = members.find(m => m.id === userId);
       if (removedMember) {
-        setMembers(prev => prev.filter(m => m.id !== userId));
+        const newMembers = members.filter(m => m.id !== userId);
+        setMembers(newMembers);
         setFriends(prev => [...prev, removedMember]);
+        
+        // ✅ Notifica al parent per refresh
+        onMembersUpdated(newMembers.map(m => m.id));
       }
       
-      onMembersUpdated();
     } catch (error) {
       console.error('Error removing member:', error);
       alert('Errore nella rimozione del membro');
+    } finally {
+      setUpdating(false);
     }
   };
 
@@ -105,7 +128,12 @@ export default function ModalManageMembers({
       <div className={styles.modal} onClick={e => e.stopPropagation()}>
         <div className={styles.header}>
           <h2 className={styles.title}>Gestione Membri - {chatName}</h2>
-          <button className={styles.closeBtn} onClick={onClose} title="Chiudi finestra">
+          <button 
+            className={styles.closeBtn} 
+            onClick={onClose} 
+            disabled={updating}
+            title="Chiudi finestra"
+          >
             <IoClose />
           </button>
         </div>
@@ -117,6 +145,7 @@ export default function ModalManageMembers({
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
             className={styles.searchInput}
+            disabled={updating}
           />
         </div>
 
@@ -141,6 +170,7 @@ export default function ModalManageMembers({
                       <button
                         className={`${styles.actionBtn} ${styles.removeBtn}`}
                         onClick={() => handleRemoveMember(member.id)}
+                        disabled={updating}
                         title="Rimuovi dal gruppo"
                       >
                         <IoRemove />
@@ -167,6 +197,7 @@ export default function ModalManageMembers({
                         <button
                           className={`${styles.actionBtn} ${styles.addBtn}`}
                           onClick={() => handleAddMember(friend.id)}
+                          disabled={updating}
                           title="Aggiungi al gruppo"
                         >
                           <IoAdd />

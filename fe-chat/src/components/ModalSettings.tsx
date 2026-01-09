@@ -1,7 +1,7 @@
 // fe-chat/src/components/ModalSettings.tsx - NUOVO
 import { useState } from 'react';
 import { IoClose, IoSunny, IoMoon, IoColorPalette } from 'react-icons/io5';
-import { useTheme } from '@/hooks/useTheme';
+import { useTheme } from '@/components/ThemeProvider';
 import styles from '@/styles/modalSettings.module.css';
 
 interface ModalSettingsProps {

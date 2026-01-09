@@ -54,12 +54,15 @@ var AuthService = /** @class */ (function () {
                         console.log('🔐 Attempting login with:', { username: credentials.username });
                         this.debugSessionStorage();
                         this.clearUserData(); // Pulisci i dati precedenti
-                        return [4 /*yield*/, api_1.ApiService.post('/auth/login', credentials)];
+                        return [4 /*yield*/, api_1.ApiService.post('/auth/login', credentials, {
+                                headers: { 'Content-Type': 'application/json' },
+                                withCredentials: true
+                            })];
                     case 1:
                         response = _e.sent();
                         console.log('✅ Login response:', response);
-                        // CORREZIONE: Salva username e carica profilo
-                        this.saveUser(credentials.username, "currentUser");
+                        // Salva username e carica profilo
+                        this.saveUser(credentials.username, 'currentUser');
                         // Carica profilo utente per ottenere l'ID
                         return [4 /*yield*/, this.getProfile(credentials.username)];
                     case 2:
@@ -71,7 +74,6 @@ var AuthService = /** @class */ (function () {
                     case 3:
                         error_1 = _e.sent();
                         console.error('❌ Login error:', error_1);
-                        // CORREZIONE: Gestione errori più dettagliata
                         if (error_1 && typeof error_1 === 'object') {
                             axiosError = error_1;
                             if (((_a = axiosError.response) === null || _a === void 0 ? void 0 : _a.status) === 401) {

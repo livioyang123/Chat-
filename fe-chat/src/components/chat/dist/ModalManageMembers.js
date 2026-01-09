@@ -43,6 +43,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
     return r;
 };
 exports.__esModule = true;
+// fe-chat/src/components/chat/ModalManageMembers.tsx - FIX COMPLETO
 var react_1 = require("react");
 var io5_1 = require("react-icons/io5");
 var services_1 = require("@/services");
@@ -54,6 +55,7 @@ function ModalManageMembers(_a) {
     var _c = react_1.useState([]), friends = _c[0], setFriends = _c[1];
     var _d = react_1.useState(true), loading = _d[0], setLoading = _d[1];
     var _e = react_1.useState(''), searchTerm = _e[0], setSearchTerm = _e[1];
+    var _f = react_1.useState(false), updating = _f[0], setUpdating = _f[1];
     react_1.useEffect(function () {
         var loadData = function () { return __awaiter(_this, void 0, void 0, function () {
             var memberPromises, membersData, allFriends, availableFriends, error_1;
@@ -89,57 +91,81 @@ function ModalManageMembers(_a) {
         }); };
         loadData();
     }, [currentMembers]);
+    // ✅ FIX: Aggiungi membro con aggiornamento stato
     var handleAddMember = function (userId) { return __awaiter(_this, void 0, void 0, function () {
-        var addedFriend_1, error_2;
+        var addedFriend, newMembers, error_2;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    _a.trys.push([0, 2, , 3]);
-                    return [4 /*yield*/, services_1.ChatService.addParticipant(chatId, userId)];
+                    if (updating)
+                        return [2 /*return*/];
+                    _a.label = 1;
                 case 1:
-                    _a.sent();
-                    addedFriend_1 = friends.find(function (f) { return f.id === userId; });
-                    if (addedFriend_1) {
-                        setMembers(function (prev) { return __spreadArrays(prev, [addedFriend_1]); });
-                        setFriends(function (prev) { return prev.filter(function (f) { return f.id !== userId; }); });
-                    }
-                    onMembersUpdated();
-                    return [3 /*break*/, 3];
+                    _a.trys.push([1, 3, 4, 5]);
+                    setUpdating(true);
+                    // Chiama API backend
+                    return [4 /*yield*/, services_1.ChatService.addParticipant(chatId, userId)];
                 case 2:
+                    // Chiama API backend
+                    _a.sent();
+                    addedFriend = friends.find(function (f) { return f.id === userId; });
+                    if (addedFriend) {
+                        newMembers = __spreadArrays(members, [addedFriend]);
+                        setMembers(newMembers);
+                        setFriends(function (prev) { return prev.filter(function (f) { return f.id !== userId; }); });
+                        // ✅ Notifica al parent per refresh
+                        onMembersUpdated(newMembers.map(function (m) { return m.id; }));
+                    }
+                    return [3 /*break*/, 5];
+                case 3:
                     error_2 = _a.sent();
                     console.error('Error adding member:', error_2);
                     alert('Errore nell\'aggiunta del membro');
-                    return [3 /*break*/, 3];
-                case 3: return [2 /*return*/];
+                    return [3 /*break*/, 5];
+                case 4:
+                    setUpdating(false);
+                    return [7 /*endfinally*/];
+                case 5: return [2 /*return*/];
             }
         });
     }); };
+    // ✅ FIX: Rimuovi membro con aggiornamento stato
     var handleRemoveMember = function (userId) { return __awaiter(_this, void 0, void 0, function () {
-        var removedMember_1, error_3;
+        var removedMember_1, newMembers, error_3;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
+                    if (updating)
+                        return [2 /*return*/];
                     if (!confirm('Rimuovere questo membro dal gruppo?'))
                         return [2 /*return*/];
                     _a.label = 1;
                 case 1:
-                    _a.trys.push([1, 3, , 4]);
+                    _a.trys.push([1, 3, 4, 5]);
+                    setUpdating(true);
+                    // Chiama API backend
                     return [4 /*yield*/, services_1.ChatService.removeParticipant(chatId, userId)];
                 case 2:
+                    // Chiama API backend
                     _a.sent();
                     removedMember_1 = members.find(function (m) { return m.id === userId; });
                     if (removedMember_1) {
-                        setMembers(function (prev) { return prev.filter(function (m) { return m.id !== userId; }); });
+                        newMembers = members.filter(function (m) { return m.id !== userId; });
+                        setMembers(newMembers);
                         setFriends(function (prev) { return __spreadArrays(prev, [removedMember_1]); });
+                        // ✅ Notifica al parent per refresh
+                        onMembersUpdated(newMembers.map(function (m) { return m.id; }));
                     }
-                    onMembersUpdated();
-                    return [3 /*break*/, 4];
+                    return [3 /*break*/, 5];
                 case 3:
                     error_3 = _a.sent();
                     console.error('Error removing member:', error_3);
                     alert('Errore nella rimozione del membro');
-                    return [3 /*break*/, 4];
-                case 4: return [2 /*return*/];
+                    return [3 /*break*/, 5];
+                case 4:
+                    setUpdating(false);
+                    return [7 /*endfinally*/];
+                case 5: return [2 /*return*/];
             }
         });
     }); };
@@ -155,10 +181,10 @@ function ModalManageMembers(_a) {
                 React.createElement("h2", { className: modalManageMembers_module_css_1["default"].title },
                     "Gestione Membri - ",
                     chatName),
-                React.createElement("button", { className: modalManageMembers_module_css_1["default"].closeBtn, onClick: onClose, title: "Chiudi finestra" },
+                React.createElement("button", { className: modalManageMembers_module_css_1["default"].closeBtn, onClick: onClose, disabled: updating, title: "Chiudi finestra" },
                     React.createElement(io5_1.IoClose, null))),
             React.createElement("div", { className: modalManageMembers_module_css_1["default"].searchContainer },
-                React.createElement("input", { type: "text", placeholder: "Cerca...", value: searchTerm, onChange: function (e) { return setSearchTerm(e.target.value); }, className: modalManageMembers_module_css_1["default"].searchInput })),
+                React.createElement("input", { type: "text", placeholder: "Cerca...", value: searchTerm, onChange: function (e) { return setSearchTerm(e.target.value); }, className: modalManageMembers_module_css_1["default"].searchInput, disabled: updating })),
             React.createElement("div", { className: modalManageMembers_module_css_1["default"].content }, loading ? (React.createElement("div", { className: modalManageMembers_module_css_1["default"].loading }, "Caricamento...")) : (React.createElement(React.Fragment, null,
                 React.createElement("div", { className: modalManageMembers_module_css_1["default"].section },
                     React.createElement("h3", { className: modalManageMembers_module_css_1["default"].sectionTitle },
@@ -169,7 +195,7 @@ function ModalManageMembers(_a) {
                         React.createElement("div", { className: modalManageMembers_module_css_1["default"].memberInfo },
                             React.createElement("div", { className: modalManageMembers_module_css_1["default"].avatar }, member.username.charAt(0).toUpperCase()),
                             React.createElement("span", { className: modalManageMembers_module_css_1["default"].username }, member.username)),
-                        React.createElement("button", { className: modalManageMembers_module_css_1["default"].actionBtn + " " + modalManageMembers_module_css_1["default"].removeBtn, onClick: function () { return handleRemoveMember(member.id); }, title: "Rimuovi dal gruppo" },
+                        React.createElement("button", { className: modalManageMembers_module_css_1["default"].actionBtn + " " + modalManageMembers_module_css_1["default"].removeBtn, onClick: function () { return handleRemoveMember(member.id); }, disabled: updating, title: "Rimuovi dal gruppo" },
                             React.createElement(io5_1.IoRemove, null)))); }))),
                 filteredFriends.length > 0 && (React.createElement("div", { className: modalManageMembers_module_css_1["default"].section },
                     React.createElement("h3", { className: modalManageMembers_module_css_1["default"].sectionTitle },
@@ -180,7 +206,7 @@ function ModalManageMembers(_a) {
                         React.createElement("div", { className: modalManageMembers_module_css_1["default"].memberInfo },
                             React.createElement("div", { className: modalManageMembers_module_css_1["default"].avatar }, friend.username.charAt(0).toUpperCase()),
                             React.createElement("span", { className: modalManageMembers_module_css_1["default"].username }, friend.username)),
-                        React.createElement("button", { className: modalManageMembers_module_css_1["default"].actionBtn + " " + modalManageMembers_module_css_1["default"].addBtn, onClick: function () { return handleAddMember(friend.id); }, title: "Aggiungi al gruppo" },
+                        React.createElement("button", { className: modalManageMembers_module_css_1["default"].actionBtn + " " + modalManageMembers_module_css_1["default"].addBtn, onClick: function () { return handleAddMember(friend.id); }, disabled: updating, title: "Aggiungi al gruppo" },
                             React.createElement(io5_1.IoAdd, null)))); }))))))))));
 }
 exports["default"] = ModalManageMembers;

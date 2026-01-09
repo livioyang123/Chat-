@@ -16,41 +16,41 @@ export class AuthService {
   static async login(credentials: LoginRequest): Promise<void> {
     try {
       console.log('🔐 Attempting login with:', { username: credentials.username });
-      
+
       this.debugSessionStorage();
       this.clearUserData(); // Pulisci i dati precedenti
-      
-      // CORREZIONE: Gestione corretta della risposta
+
+      // ✅ CORREZIONE: Assicurati di inviare JSON puro e abilitare cookie
       const response = await ApiService.post<LoginResponse>(
-        '/auth/login', 
-        credentials
+        '/auth/login',
+        credentials,
+        {
+          headers: { 'Content-Type': 'application/json' },
+          withCredentials: true, // necessario per cookie JWT
+        }
       );
-      
+
       console.log('✅ Login response:', response);
-      
-      // CORREZIONE: Salva username e carica profilo
-      this.saveUser(credentials.username, "currentUser");
-      
+
+      // Salva username e carica profilo
+      this.saveUser(credentials.username, 'currentUser');
+
       // Carica profilo utente per ottenere l'ID
       await this.getProfile(credentials.username);
 
       this.debugSessionStorage();
-      
+
       console.log('✅ Login successful');
-      
+
     } catch (error) {
       console.error('❌ Login error:', error);
-      
-      // CORREZIONE: Gestione errori più dettagliata
+
       if (error && typeof error === 'object') {
         const axiosError = error as { 
-          response?: { 
-            status?: number; 
-            data?: { message?: string } 
-          }; 
+          response?: { status?: number; data?: { message?: string } }; 
           message?: string 
         };
-        
+
         if (axiosError.response?.status === 401) {
           throw new Error('Credenziali non valide. Verifica username e password.');
         } else if (axiosError.response?.status === 500) {
@@ -59,7 +59,7 @@ export class AuthService {
           throw new Error(axiosError.response.data.message);
         }
       }
-      
+
       throw new Error('Errore durante il login. Verifica la connessione al server.');
     }
   }

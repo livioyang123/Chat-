@@ -3,11 +3,11 @@ exports.__esModule = true;
 // fe-chat/src/components/ModalSettings.tsx - NUOVO
 var react_1 = require("react");
 var io5_1 = require("react-icons/io5");
-var useTheme_1 = require("@/hooks/useTheme");
+var ThemeProvider_1 = require("@/components/ThemeProvider");
 var modalSettings_module_css_1 = require("@/styles/modalSettings.module.css");
 function ModalSettings(_a) {
     var onClose = _a.onClose;
-    var _b = useTheme_1.useTheme(), theme = _b.theme, customTheme = _b.customTheme, changeTheme = _b.changeTheme, setCustomColors = _b.setCustomColors, resetTheme = _b.resetTheme;
+    var _b = ThemeProvider_1.useTheme(), theme = _b.theme, customTheme = _b.customTheme, changeTheme = _b.changeTheme, setCustomColors = _b.setCustomColors, resetTheme = _b.resetTheme;
     var _c = react_1.useState((customTheme === null || customTheme === void 0 ? void 0 : customTheme.primaryColor) || '#6366f1'), primaryColor = _c[0], setPrimaryColor = _c[1];
     var _d = react_1.useState((customTheme === null || customTheme === void 0 ? void 0 : customTheme.secondaryColor) || '#8b5cf6'), secondaryColor = _d[0], setSecondaryColor = _d[1];
     var handleApplyCustom = function () {

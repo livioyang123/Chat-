@@ -2,22 +2,31 @@ package com.chat.demo.controller;
 
 import com.chat.demo.data.dto.ErrorResponse;
 import com.chat.demo.data.entity.Chatroom;
+import com.chat.demo.data.entity.Message;
 import com.chat.demo.data.service.ChatroomService;
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/chatrooms")
 @RequiredArgsConstructor
 public class ChatroomController {
+    
     private final ChatroomService chatroomService;
+    
+    @Autowired
+    private SimpMessagingTemplate messagingTemplate;
 
     @PostMapping
     public ResponseEntity<Chatroom> createChatRoom(@RequestBody Chatroom chatroom) {
@@ -54,26 +63,66 @@ public class ChatroomController {
         return chatroomService.getRoomsByParticipantId(userId);
     }
 
+    // ✅ FIX: Aggiungi membro CON notifica WebSocket
     @PutMapping("/{id}/add-participant/{userId}")
-    public ResponseEntity<Chatroom> addParticipantToChatRoom(@PathVariable String id, @PathVariable String userId) {
-        return chatroomService.addParticipantToRoom(id, userId)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<?> addParticipantToChatRoom(
+            @PathVariable String id, 
+            @PathVariable String userId,
+            @RequestParam(required = false) String addedBy) {
+        
+        Optional<Chatroom> result = chatroomService.addParticipantToRoom(id, userId);
+        
+        if (result.isPresent()) {
+            Chatroom chatroom = result.get();
+            
+            // Invia notifica via WebSocket
+            sendMemberChangeNotification(
+                id, 
+                userId, 
+                addedBy != null ? addedBy : "SYSTEM",
+                "MEMBER_ADDED"
+            );
+            
+            return ResponseEntity.ok(chatroom);
+        }
+        
+        return ResponseEntity.notFound().build();
     }
 
+    // ✅ FIX: Rimuovi membro CON notifica WebSocket
     @PutMapping("/{id}/remove-participant/{userId}")
-    public ResponseEntity<Chatroom> removeParticipantFromChatRoom(@PathVariable String id, @PathVariable String userId) {
-        return chatroomService.removeParticipantFromRoom(id, userId)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<?> removeParticipantFromChatRoom(
+            @PathVariable String id, 
+            @PathVariable String userId,
+            @RequestParam(required = false) String removedBy) {
+        
+        Optional<Chatroom> result = chatroomService.removeParticipantFromRoom(id, userId);
+        
+        if (result.isPresent()) {
+            Chatroom chatroom = result.get();
+            
+            // Invia notifica via WebSocket
+            sendMemberChangeNotification(
+                id, 
+                userId, 
+                removedBy != null ? removedBy : "SYSTEM",
+                "MEMBER_REMOVED"
+            );
+            
+            return ResponseEntity.ok(chatroom);
+        }
+        
+        return ResponseEntity.notFound().build();
     }
 
+    // ✅ FIX: Abbandona gruppo CON notifica WebSocket
     @PostMapping("/{id}/leave")
     public ResponseEntity<?> leaveGroup(
             @PathVariable String id,
             @RequestBody Map<String, String> request) {
         try {
             String userId = request.get("userId");
+            String username = request.get("username");
             
             if (userId == null || userId.trim().isEmpty()) {
                 return ResponseEntity.badRequest()
@@ -87,7 +136,6 @@ public class ChatroomController {
             
             Chatroom chatroom = chatroomOpt.get();
             
-            // Verifica che l'utente sia nel gruppo
             if (!chatroom.getParticipantIds().contains(userId)) {
                 return ResponseEntity.badRequest()
                     .body(new ErrorResponse("Utente non nel gruppo"));
@@ -95,6 +143,9 @@ public class ChatroomController {
             
             // Rimuovi utente
             chatroom.getParticipantIds().remove(userId);
+            
+            // ✅ NOTIFICA: Utente ha abbandonato
+            sendLeaveGroupNotification(id, userId, username);
             
             // Se non ci sono più membri, elimina il gruppo
             if (chatroom.getParticipantIds().isEmpty()) {
@@ -117,7 +168,42 @@ public class ChatroomController {
                 .body(new ErrorResponse("Errore: " + e.getMessage()));
         }
     }
-    
 
-    
+    // ✅ Helper: Invia notifica cambio membri
+    private void sendMemberChangeNotification(
+            String chatId, 
+            String userId, 
+            String actionBy, 
+            String action) {
+        
+        Message notification = new Message();
+        notification.setId(UUID.randomUUID().toString());
+        notification.setSenderId("SYSTEM");
+        notification.setChatRoomId(chatId);
+        notification.setType(Message.MessageType.CHAT);
+        notification.setTimestamp(LocalDateTime.now());
+        
+        String content = action.equals("MEMBER_ADDED") 
+            ? userId + " è stato aggiunto al gruppo"
+            : userId + " è stato rimosso dal gruppo";
+        
+        notification.setContent(content);
+        
+        messagingTemplate.convertAndSend("/topic/chatroom/" + chatId, notification);
+    }
+
+    // ✅ Helper: Invia notifica abbandono gruppo
+    private void sendLeaveGroupNotification(String chatId, String userId, String username) {
+        Message notification = new Message();
+        notification.setId(UUID.randomUUID().toString());
+        notification.setSenderId("SYSTEM");
+        notification.setChatRoomId(chatId);
+        notification.setType(Message.MessageType.CHAT);
+        notification.setTimestamp(LocalDateTime.now());
+        notification.setContent(
+            (username != null ? username : userId) + " ha abbandonato il gruppo"
+        );
+        
+        messagingTemplate.convertAndSend("/topic/chatroom/" + chatId, notification);
+    }
 }

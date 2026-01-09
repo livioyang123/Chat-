@@ -1,4 +1,4 @@
-// fe-chat/src/components/chat/ChatList.tsx - AGGIORNATO
+// fe-chat/src/components/chat/ChatList.tsx - FIX REFRESH MEMBRI
 import { ChatService } from '@/services';
 import { useEffect, useState } from 'react';
 import type { ChatRoom } from '@/types/api';
@@ -37,7 +37,11 @@ export default function ChatList({ onButtonClick }: ChatListProps) {
           if (confirm(`Vuoi abbandonare ${chat.name}?`)) {
             try {
               await ChatService.leaveChat(chat.id);
-              setChats(prev => prev.filter(c => c.id !== chat.id));
+              
+              // ✅ Ricarica lista chat dopo abbandono
+              const updatedChats = await ChatService.getUserChats();
+              setChats(updatedChats);
+              
             } catch (error) {
               console.error('Errore abbandono gruppo:', error);
               alert('Errore nell\'abbandono del gruppo');
@@ -77,6 +81,29 @@ export default function ChatList({ onButtonClick }: ChatListProps) {
     fetchChats();
   }, []);
 
+  // ✅ FIX: Handler per aggiornamento membri
+  const handleMembersUpdated = async (newMembers: string[]) => {
+    try {
+      // Aggiorna solo la chat specifica
+      if (manageMembersChat) {
+        setChats(prevChats => 
+          prevChats.map(chat => 
+            chat.id === manageMembersChat.id 
+              ? { ...chat, participantIds: newMembers }
+              : chat
+          )
+        );
+      }
+      
+      // Opzionale: ricarica tutte le chat per essere sicuri
+      const updatedChats = await ChatService.getUserChats();
+      setChats(updatedChats);
+      
+    } catch (error) {
+      console.error('Error refreshing chats:', error);
+    }
+  };
+
   return (
     <div className={style["chat-list"]}>
       {openGroupModal && (
@@ -99,10 +126,7 @@ export default function ChatList({ onButtonClick }: ChatListProps) {
           chatName={manageMembersChat.name}
           currentMembers={manageMembersChat.participantIds}
           onClose={() => setManageMembersChat(null)}
-          onMembersUpdated={() => {
-            // Ricarica chat per aggiornare membri
-            ChatService.getUserChats().then(setChats);
-          }}
+          onMembersUpdated={handleMembersUpdated} // ✅ Passa handler
         />
       )}
 
